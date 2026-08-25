@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>QuizFlow Admin Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "tertiary": "#3e3fcc",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "background": "#f9f9ff",
+                        "inverse-on-surface": "#ecf1ff",
+                        "on-surface": "#111c2d",
+                        "on-primary-fixed": "#00174b",
+                        "secondary-fixed": "#89f5e7",
+                        "surface-container-high": "#dee8ff",
+                        "surface-tint": "#0053db",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "surface-container-low": "#f0f3ff",
+                        "on-error-container": "#93000a",
+                        "secondary": "#006a61",
+                        "surface-dim": "#cfdaf2",
+                        "on-error": "#ffffff",
+                        "inverse-surface": "#263143",
+                        "on-surface-variant": "#434655",
+                        "tertiary-container": "#585be6",
+                        "surface-variant": "#d8e3fb",
+                        "on-tertiary": "#ffffff",
+                        "outline-variant": "#c3c6d7",
+                        "surface": "#f9f9ff",
+                        "primary": "#004ac6",
+                        "on-primary-container": "#eeefff",
+                        "on-background": "#111c2d",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed-dim": "#c0c1ff",
+                        "surface-container-highest": "#d8e3fb",
+                        "secondary-container": "#86f2e4",
+                        "surface-container": "#e7eeff",
+                        "on-tertiary-fixed-variant": "#2f2ebe",
+                        "on-secondary-fixed-variant": "#005049",
+                        "outline": "#737686",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed": "#00201d",
+                        "secondary-fixed-dim": "#6bd8cb",
+                        "inverse-primary": "#b4c5ff",
+                        "primary-fixed": "#dbe1ff",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#e1e0ff",
+                        "on-tertiary-fixed": "#07006c",
+                        "primary-container": "#2563eb",
+                        "on-secondary-container": "#006f66",
+                        "on-tertiary-container": "#f1eeff",
+                        "surface-bright": "#f9f9ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "space-sm": "8px",
+                        "space-2xl": "64px",
+                        "gutter": "24px",
+                        "space-lg": "24px",
+                        "container-max": "1280px",
+                        "space-xs": "4px",
+                        "space-md": "16px",
+                        "unit": "4px",
+                        "space-xl": "40px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "headline-xl": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen font-body-md text-body-md overflow-x-hidden">
+<!-- Mobile Top Navigation (md:hidden) -->
+<nav class="md:hidden flex justify-between items-center px-space-md h-16 bg-surface-container-lowest border-b border-outline-variant fixed w-full top-0 z-50">
+<span class="text-headline-lg-mobile font-headline-lg-mobile text-primary font-bold">QuizFlow</span>
+<button class="text-on-surface p-2">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+</nav>
+<!-- SideNavBar (hidden md:flex) -->
+<aside class="hidden lg:flex flex-col h-screen fixed left-0 top-0 py-space-lg px-space-md w-64 z-40 bg-surface border-r border-outline-variant">
+<div class="mb-space-2xl px-space-sm flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant shrink-0">
+<img alt="Admin Avatar" class="w-full h-full object-cover" data-alt="A clean, professional headshot of an administrator in a well-lit modern office setting. The lighting is bright and clear, reflecting a modern corporate aesthetic. The subject is smiling slightly, conveying approachability and competence. The background is slightly blurred to keep focus on the person." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCX8MiDqLSxS6aaFZr8cpRyYdvSDzWC9ukMa9sdDnCS7swoO8WDZxmRJFYJO-g45rQ9KBKqyyyjNX_mP6pRG4rDEXe6TFI29R7M-l2VLB6C3cGc1YbzSHgZ72SAZElMukKU5a5gQ1WFEtd3qx3ZmFPV5X-Lhc5cJmcbc-Dj__839YB4jHR0pnzwWFh4oQPdxJUuRKb6f1_H8vBy8AOZhtE0ZFa6BZzzRfBLKp-8PeMbBhBXx1IXvglp"/>
+</div>
+<div>
+<h2 class="text-headline-sm font-headline-md text-on-surface font-bold leading-tight">QuizFlow Admin</h2>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Coaching Portal</p>
+</div>
+</div>
+<nav class="flex-1 flex flex-col gap-space-xs">
+<a class="flex items-center gap-space-sm px-space-sm py-3 bg-primary-container text-on-primary-container rounded-lg font-bold translate-x-1 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined filled" data-icon="dashboard">dashboard</span>
+<span class="text-label-md font-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-sm py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="text-label-md font-label-md">Batches</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-sm py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="text-label-md font-label-md">Students</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-sm py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="quiz">quiz</span>
+<span class="text-label-md font-label-md">Quizzes</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-sm py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+<span class="text-label-md font-label-md">Quiz Builder</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-sm py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="text-label-md font-label-md">Settings</span>
+</a>
+</nav>
+<div class="mt-auto flex flex-col gap-space-sm pt-space-lg">
+<button class="w-full bg-primary hover:bg-primary/90 text-on-primary text-label-md font-label-md py-3 rounded-lg shadow-sm transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+                 Create New Quiz
+             </button>
+<a class="flex items-center gap-space-sm px-space-sm py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="text-label-md font-label-md">Help Center</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-sm py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="text-label-md font-label-md">Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="pt-16 md:pt-0 lg:ml-64 min-h-screen flex flex-col">
+<div class="max-w-container-max mx-auto w-full px-space-md md:px-space-xl py-space-lg md:py-space-xl flex-1 flex flex-col gap-gutter">
+<!-- Header Section -->
+<header class="flex flex-col sm:flex-row sm:items-end justify-between gap-space-md mb-space-sm">
+<div>
+<h1 class="text-headline-xl font-headline-xl text-on-surface">Welcome back, Admin</h1>
+<p class="text-body-lg font-body-lg text-on-surface-variant mt-1">Here's what's happening with your coaching institute today.</p>
+</div>
+<div class="flex gap-space-sm">
+<button class="p-2 rounded-full border border-outline-variant text-on-surface hover:bg-surface-container-low transition-colors bg-surface-container-lowest">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant shrink-0 cursor-pointer hidden md:block">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A clean, professional headshot of an administrator in a well-lit modern office setting. The lighting is bright and clear, reflecting a modern corporate aesthetic. The subject is smiling slightly, conveying approachability and competence. The background is slightly blurred to keep focus on the person." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdjdf7kSqrzPFzNX0Pc4AmJVaN57LBKDMzzuC9B_Wg2eBgRjw7ZMEG5JLZCYqZG1mK9w-XJ5hoeySm8eZW_mEdf29RaUFy8IzjUW4TwCpGvCmWiQaVftZlUqB2YMFeYBuRr2fnNC-tsuHZ6upKGprxwqney16_mfJeA0bbhwbBIT_63iUP2_WjQkIErbJoNybMKk9kus3G6lgkucwpGjH7BObPdGMUi8JZ6_M0q3BiOjEVDE6trHSM"/>
+</div>
+</div>
+</header>
+<!-- Stats Grid -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- Stat Card 1 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg border border-outline-variant shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-space-sm">
+<div class="p-2 bg-primary-container/20 rounded-lg text-primary">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+</div>
+<span class="text-label-sm font-label-sm text-secondary flex items-center gap-1 bg-secondary-container/30 px-2 py-1 rounded-full">
+<span class="material-symbols-outlined text-[14px]" data-icon="trending_up">trending_up</span> +12%
+                        </span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant mb-1">Total Students</p>
+<h3 class="text-headline-lg font-headline-lg text-on-surface">1,240</h3>
+</div>
+<!-- Stat Card 2 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg border border-outline-variant shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-space-sm">
+<div class="p-2 bg-tertiary-container/20 rounded-lg text-tertiary">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+</div>
+<span class="text-label-sm font-label-sm text-on-surface-variant flex items-center gap-1 bg-surface-container-high px-2 py-1 rounded-full">
+                           Stable
+                        </span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant mb-1">Active Batches</p>
+<h3 class="text-headline-lg font-headline-lg text-on-surface">42</h3>
+</div>
+<!-- Stat Card 3 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg border border-outline-variant shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-space-sm">
+<div class="p-2 bg-primary-container/20 rounded-lg text-primary">
+<span class="material-symbols-outlined" data-icon="quiz">quiz</span>
+</div>
+<span class="text-label-sm font-label-sm text-secondary flex items-center gap-1 bg-secondary-container/30 px-2 py-1 rounded-full">
+<span class="material-symbols-outlined text-[14px]" data-icon="trending_up">trending_up</span> +5 this week
+                        </span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant mb-1">Total Quizzes Created</p>
+<h3 class="text-headline-lg font-headline-lg text-on-surface">156</h3>
+</div>
+<!-- Stat Card 4 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg border border-outline-variant shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-space-sm">
+<div class="p-2 bg-secondary/20 rounded-lg text-secondary">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+</div>
+<span class="text-label-sm font-label-sm text-error flex items-center gap-1 bg-error-container/30 px-2 py-1 rounded-full">
+<span class="material-symbols-outlined text-[14px]" data-icon="trending_down">trending_down</span> -2%
+                        </span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant mb-1">Avg. Student Score</p>
+<h3 class="text-headline-lg font-headline-lg text-on-surface">78%</h3>
+</div>
+</section>
+<!-- Main Content Layout (Table & Actions) -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<!-- Recent Quizzes Table -->
+<section class="lg:col-span-2 bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden flex flex-col">
+<div class="p-space-lg border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest">
+<h2 class="text-headline-md font-headline-md text-on-surface">Recent Quizzes</h2>
+<button class="text-label-md font-label-md text-primary hover:underline">View All</button>
+</div>
+<div class="overflow-x-auto flex-1 p-space-sm">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="text-label-sm font-label-sm text-on-surface-variant border-b border-outline-variant/50">
+<th class="py-3 px-4 font-medium">Quiz Name</th>
+<th class="py-3 px-4 font-medium">Batch</th>
+<th class="py-3 px-4 font-medium">Date Created</th>
+<th class="py-3 px-4 font-medium">Status</th>
+</tr>
+</thead>
+<tbody class="text-body-sm font-body-sm text-on-surface">
+<tr class="border-b border-outline-variant/30 hover:bg-surface-container-low transition-colors">
+<td class="py-4 px-4 font-medium text-on-surface">Physics - Kinematics Mock Test</td>
+<td class="py-4 px-4 text-on-surface-variant">Class 11 - JEE Prep</td>
+<td class="py-4 px-4 text-on-surface-variant">Oct 24, 2024</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center px-2 py-1 rounded-full bg-secondary-container/30 text-secondary text-label-sm font-label-sm">Published</span>
+</td>
+</tr>
+<tr class="border-b border-outline-variant/30 hover:bg-surface-container-low transition-colors">
+<td class="py-4 px-4 font-medium text-on-surface">Chemistry - Organic Reaction Mechs</td>
+<td class="py-4 px-4 text-on-surface-variant">Class 12 - NEET Prep</td>
+<td class="py-4 px-4 text-on-surface-variant">Oct 22, 2024</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center px-2 py-1 rounded-full bg-surface-container-high text-on-surface-variant text-label-sm font-label-sm">Draft</span>
+</td>
+</tr>
+<tr class="border-b border-outline-variant/30 hover:bg-surface-container-low transition-colors">
+<td class="py-4 px-4 font-medium text-on-surface">Math - Calculus Integration</td>
+<td class="py-4 px-4 text-on-surface-variant">Class 12 - Regular</td>
+<td class="py-4 px-4 text-on-surface-variant">Oct 20, 2024</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center px-2 py-1 rounded-full bg-secondary-container/30 text-secondary text-label-sm font-label-sm">Published</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-4 px-4 font-medium text-on-surface">Biology - Cell Structure</td>
+<td class="py-4 px-4 text-on-surface-variant">Class 11 - NEET Prep</td>
+<td class="py-4 px-4 text-on-surface-variant">Oct 18, 2024</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center px-2 py-1 rounded-full bg-error-container/30 text-error text-label-sm font-label-sm">Archived</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Quick Actions & Updates -->
+<div class="flex flex-col gap-gutter">
+<!-- Quick Actions -->
+<section class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-space-lg">
+<h2 class="text-headline-md font-headline-md text-on-surface mb-space-md">Quick Actions</h2>
+<div class="flex flex-col gap-space-sm">
+<button class="w-full flex items-center justify-between p-4 rounded-lg border border-outline-variant hover:border-primary hover:bg-surface-container-low transition-all group text-left">
+<div class="flex items-center gap-3">
+<div class="p-2 bg-primary-container/10 rounded-md text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+</div>
+<div>
+<h4 class="text-label-md font-label-md text-on-surface">Create New Quiz</h4>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Start from scratch or template</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-4 rounded-lg border border-outline-variant hover:border-primary hover:bg-surface-container-low transition-all group text-left">
+<div class="flex items-center gap-3">
+<div class="p-2 bg-tertiary-container/10 rounded-md text-tertiary group-hover:bg-tertiary group-hover:text-on-tertiary transition-colors">
+<span class="material-symbols-outlined" data-icon="person_add">person_add</span>
+</div>
+<div>
+<h4 class="text-label-md font-label-md text-on-surface">Add Student</h4>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Enroll new students to batches</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-4 rounded-lg border border-outline-variant hover:border-primary hover:bg-surface-container-low transition-all group text-left">
+<div class="flex items-center gap-3">
+<div class="p-2 bg-secondary-container/10 rounded-md text-secondary group-hover:bg-secondary group-hover:text-on-secondary transition-colors">
+<span class="material-symbols-outlined" data-icon="campaign">campaign</span>
+</div>
+<div>
+<h4 class="text-label-md font-label-md text-on-surface">Send Announcement</h4>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Notify batches immediately</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</section>
+</div>
+</div>
+<!-- Bottom NavBar for Mobile (md:hidden) - Simplified for this layout as SideNav handles main nav, but including per guidelines if destination -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-surface-container-lowest border-t border-outline-variant flex justify-around items-center h-16 pb-safe z-50">
+<a class="flex flex-col items-center justify-center w-full h-full text-primary" href="#">
+<span class="material-symbols-outlined filled" data-icon="dashboard">dashboard</span>
+<span class="text-[10px] font-medium mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center w-full h-full text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="quiz">quiz</span>
+<span class="text-[10px] font-medium mt-1">Quizzes</span>
+</a>
+<a class="flex flex-col items-center justify-center w-full h-full text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="text-[10px] font-medium mt-1">Batches</span>
+</a>
+<a class="flex flex-col items-center justify-center w-full h-full text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="text-[10px] font-medium mt-1">Settings</span>
+</a>
+</nav>
+</div>
+</main>
+</body></html>

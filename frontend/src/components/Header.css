@@ -1,0 +1,183 @@
+header {
+    background-color: white;
+    box-shadow: var(--shadow-sm);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-main {
+    max-width: 1300px;
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.header-left > h1 {
+    color: var(--primary);
+    font-size: 1.5rem;
+    font-weight: 800;
+}
+
+.logo {
+    text-decoration: none;
+}
+
+.logo h1 {
+    color: var(--primary);
+    font-size: 1.5rem;
+    font-weight: 800;
+}
+
+.header-left > ul {
+    display: flex;
+    list-style-type: none;
+    gap: 8px;
+}
+
+.header-left li a {
+    text-decoration: none;
+    color: var(--text-primary);
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.header-left li a:hover {
+    color: var(--primary);
+    background: var(--primary-light);
+}
+
+.login-btn {
+    width: 120px;
+    height: 40px;
+    background-color: var(--primary);
+    color: var(--text-white);
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.login-btn:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-1px);
+}
+
+/* User Menu Styles */
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    padding: 6px 12px;
+    background: var(--bg-secondary);
+    border-radius: 20px;
+}
+
+.admin-btn,
+.solve-quiz-btn,
+.logout-btn {
+    padding: 10px 20px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.admin-btn {
+    background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+    color: white;
+}
+
+.admin-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+}
+
+.solve-quiz-btn {
+    background: var(--primary);
+    color: white;
+}
+
+.solve-quiz-btn:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+}
+
+.logout-btn {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.logout-btn:hover {
+    background: var(--bg-secondary);
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .header-left > ul {
+        gap: 4px;
+    }
+
+    .header-left li a {
+        padding: 6px 12px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .header-main {
+        padding: 10px 16px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .header-left {
+        order: 1;
+        width: 100%;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .header-left > ul {
+        display: none;
+    }
+
+    .header-right {
+        order: 2;
+    }
+
+    .user-name {
+        display: none;
+    }
+
+    .admin-btn,
+    .solve-quiz-btn,
+    .logout-btn {
+        padding: 8px 14px;
+        font-size: 13px;
+    }
+}

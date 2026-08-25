@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>QuizFlow - Empower Your Coaching</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "tertiary": "#3e3fcc",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "background": "#f9f9ff",
+                        "inverse-on-surface": "#ecf1ff",
+                        "on-surface": "#111c2d",
+                        "on-primary-fixed": "#00174b",
+                        "secondary-fixed": "#89f5e7",
+                        "surface-container-high": "#dee8ff",
+                        "surface-tint": "#0053db",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "surface-container-low": "#f0f3ff",
+                        "on-error-container": "#93000a",
+                        "secondary": "#006a61",
+                        "surface-dim": "#cfdaf2",
+                        "on-error": "#ffffff",
+                        "inverse-surface": "#263143",
+                        "on-surface-variant": "#434655",
+                        "tertiary-container": "#585be6",
+                        "surface-variant": "#d8e3fb",
+                        "on-tertiary": "#ffffff",
+                        "outline-variant": "#c3c6d7",
+                        "surface": "#f9f9ff",
+                        "primary": "#004ac6",
+                        "on-primary-container": "#eeefff",
+                        "on-background": "#111c2d",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed-dim": "#c0c1ff",
+                        "surface-container-highest": "#d8e3fb",
+                        "secondary-container": "#86f2e4",
+                        "surface-container": "#e7eeff",
+                        "on-tertiary-fixed-variant": "#2f2ebe",
+                        "on-secondary-fixed-variant": "#005049",
+                        "outline": "#737686",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed": "#00201d",
+                        "secondary-fixed-dim": "#6bd8cb",
+                        "inverse-primary": "#b4c5ff",
+                        "primary-fixed": "#dbe1ff",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#e1e0ff",
+                        "on-tertiary-fixed": "#07006c",
+                        "primary-container": "#2563eb",
+                        "on-secondary-container": "#006f66",
+                        "on-tertiary-container": "#f1eeff",
+                        "surface-bright": "#f9f9ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "space-sm": "8px",
+                        "space-2xl": "64px",
+                        "gutter": "24px",
+                        "space-lg": "24px",
+                        "container-max": "1280px",
+                        "space-xs": "4px",
+                        "space-md": "16px",
+                        "unit": "4px",
+                        "space-xl": "40px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter", "sans-serif"],
+                        "label-md": ["Inter", "sans-serif"],
+                        "headline-lg": ["Inter", "sans-serif"],
+                        "headline-md": ["Inter", "sans-serif"],
+                        "headline-lg-mobile": ["Inter", "sans-serif"],
+                        "body-md": ["Inter", "sans-serif"],
+                        "label-sm": ["Inter", "sans-serif"],
+                        "headline-xl": ["Inter", "sans-serif"],
+                        "body-lg": ["Inter", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "headline-xl": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+</head>
+
+<body class="bg-background text-on-background font-body-md antialiased min-h-screen flex flex-col pt-16">
+    <!-- TopNavBar -->
+    <nav
+        class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-gutter h-16 bg-surface-container-lowest border-b border-outline-variant shadow-sm transition-all duration-300">
+        <div class="max-w-container-max mx-auto w-full flex justify-between items-center">
+            <div class="flex items-center gap-space-md">
+                <a class="text-headline-md font-headline-md font-bold text-primary" href="#">QuizFlow</a>
+                <div class="hidden md:flex gap-space-lg ml-space-xl">
+                    <a class="text-on-surface-variant font-medium hover:bg-surface-container-low transition-colors px-3 py-2 rounded-md"
+                        href="#">Features</a>
+                    <a class="text-on-surface-variant font-medium hover:bg-surface-container-low transition-colors px-3 py-2 rounded-md"
+                        href="#">Pricing</a>
+                </div>
+            </div>
+            <div class="flex items-center gap-space-md">
+                <button
+                    class="hidden md:flex text-on-surface-variant hover:bg-surface-container-low p-2 rounded-full transition-colors">
+                    <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+                </button>
+                <button
+                    class="hidden md:flex text-on-surface-variant hover:bg-surface-container-low p-2 rounded-full transition-colors">
+                    <span class="material-symbols-outlined" data-icon="settings">settings</span>
+                </button>
+                <button
+                    class="bg-primary-container text-on-primary font-label-md px-4 py-2 rounded-lg hover:bg-on-primary-fixed-variant transition-colors shadow-sm hover:shadow-md">
+                    Login
+                </button>
+            </div>
+        </div>
+    </nav>
+    <!-- Main Content -->
+    <main
+        class="flex-grow flex flex-col items-center w-full max-w-container-max mx-auto px-space-md md:px-space-xl pb-space-2xl">
+        <!-- Hero Section -->
+        <section class="w-full py-space-2xl md:py-24 flex flex-col items-center text-center max-w-4xl">
+            <h1
+                class="text-headline-lg-mobile md:text-headline-xl font-headline-lg-mobile md:font-headline-xl text-on-surface mb-space-md leading-tight">
+                Empower Your Coaching with <span class="text-primary">Scalable Quizzes</span>
+            </h1>
+            <p class="text-body-lg font-body-lg text-on-surface-variant mb-space-xl max-w-2xl">
+                Streamline your assessment process, gain in-depth insights, and drive student growth with our
+                professional-grade quiz management platform built for modern coaching institutes.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-space-md w-full sm:w-auto">
+                <button
+                    class="bg-primary-container text-on-primary font-label-md px-8 py-3 rounded-lg hover:bg-on-primary-fixed-variant transition-colors shadow-[0px_4px_6px_-1px_rgba(30,41,59,0.05)] hover:shadow-[0px_10px_15px_-3px_rgba(30,41,59,0.1)] hover:-translate-y-0.5 duration-200">
+                    Start Free Trial
+                </button>
+                <button
+                    class="bg-transparent text-on-surface border border-outline-variant font-label-md px-8 py-3 rounded-lg hover:bg-surface-container-low transition-colors shadow-[0px_4px_6px_-1px_rgba(30,41,59,0.05)]">
+                    View Demo
+                </button>
+            </div>
+        </section>
+        <!-- Feature Image/Graphic -->
+        <section
+            class="w-full mb-space-2xl relative rounded-xl overflow-hidden shadow-[0px_10px_15px_-3px_rgba(30,41,59,0.1)] border border-outline-variant bg-surface-container-lowest h-[400px] md:h-[500px]">
+            <div class="bg-cover bg-center w-full h-full"
+                data-alt="A clean, modern dashboard interface for a quiz application displayed on a sleek laptop screen. The interface uses a light mode aesthetic with deep blue primary accents. Data visualizations like bar charts and progress rings are visible. The laptop sits on a minimalist white desk with subtle, soft natural lighting coming from an off-screen window, creating a professional and focused atmosphere."
+                style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB4kh4fObhGYPMrYeoW7Lyw18Sc5uJyBK3ZMJwN80ryPIJxNju8JDoZCtZvqrlmm0LlAtqPuRPlBtjNAvnnesDzABhOYMVfkRvMkPOIc2LG55NPEp9qdAum1GEjJRK5qfaAQeuwBbX6XFgJP6ju4nrE32SiQ1Pdx8TBHRY6T-AA7BRRaXrCJukHIy1pFFNblMAPAUWTzZ7m3UmdKVnN0vewwfPYKKJEnj4c3G8Fq5HELSKpHoz2bDxo')">
+            </div>
+        </section>
+        <!-- Features Bento Grid -->
+        <section class="w-full grid grid-cols-1 md:grid-cols-3 gap-space-lg mb-space-2xl">
+            <!-- Card 1 -->
+            <div
+                class="bg-surface-container-lowest border border-outline-variant rounded-[16px] p-space-lg shadow-[0px_4px_6px_-1px_rgba(30,41,59,0.05)] hover:shadow-[0px_10px_15px_-3px_rgba(30,41,59,0.1)] transition-shadow duration-300 flex flex-col items-start group">
+                <div
+                    class="bg-surface-container-low text-primary p-3 rounded-lg mb-space-md group-hover:scale-110 transition-transform duration-300">
+                    <span class="material-symbols-outlined text-3xl" data-icon="grading">grading</span>
+                </div>
+                <h3 class="text-headline-md font-headline-md text-on-surface mb-space-xs">Automated Grading</h3>
+                <p class="text-body-md font-body-md text-on-surface-variant">Instantly score multiple-choice and
+                    short-answer questions, saving hours of manual review time and providing immediate feedback.</p>
+            </div>
+            <!-- Card 2 -->
+            <div
+                class="bg-surface-container-lowest border border-outline-variant rounded-[16px] p-space-lg shadow-[0px_4px_6px_-1px_rgba(30,41,59,0.05)] hover:shadow-[0px_10px_15px_-3px_rgba(30,41,59,0.1)] transition-shadow duration-300 flex flex-col items-start group">
+                <div
+                    class="bg-surface-container-low text-primary p-3 rounded-lg mb-space-md group-hover:scale-110 transition-transform duration-300">
+                    <span class="material-symbols-outlined text-3xl" data-icon="group">group</span>
+                </div>
+                <h3 class="text-headline-md font-headline-md text-on-surface mb-space-xs">Batch Management</h3>
+                <p class="text-body-md font-body-md text-on-surface-variant">Effortlessly organize students into
+                    cohorts. Assign specific quizzes, track progress, and manage communications per batch.</p>
+            </div>
+            <!-- Card 3 -->
+            <div
+                class="bg-surface-container-lowest border border-outline-variant rounded-[16px] p-space-lg shadow-[0px_4px_6px_-1px_rgba(30,41,59,0.05)] hover:shadow-[0px_10px_15px_-3px_rgba(30,41,59,0.1)] transition-shadow duration-300 flex flex-col items-start group md:col-span-1">
+                <div
+                    class="bg-surface-container-low text-primary p-3 rounded-lg mb-space-md group-hover:scale-110 transition-transform duration-300">
+                    <span class="material-symbols-outlined text-3xl" data-icon="insights">insights</span>
+                </div>
+                <h3 class="text-headline-md font-headline-md text-on-surface mb-space-xs">In-depth Analytics</h3>
+                <p class="text-body-md font-body-md text-on-surface-variant">Identify knowledge gaps with detailed
+                    performance reports. Visualize trends across individuals and entire batches.</p>
+            </div>
+        </section>
+    </main>
+    <!-- Footer -->
+    <footer class="w-full bg-surface-container-low border-t border-outline-variant mt-auto">
+        <div
+            class="w-full py-space-xl px-gutter flex flex-col md:flex-row justify-between items-center max-w-container-max mx-auto gap-space-md">
+            <div class="text-headline-sm font-headline-md font-bold text-primary">QuizFlow</div>
+            <div class="flex flex-wrap justify-center gap-space-md">
+                <a class="text-on-surface-variant font-label-sm text-label-sm hover:text-primary transition-colors"
+                    href="#">Features</a>
+                <a class="text-on-surface-variant font-label-sm text-label-sm hover:text-primary transition-colors"
+                    href="#">Pricing</a>
+                <a class="text-on-surface-variant font-label-sm text-label-sm hover:text-primary transition-colors"
+                    href="#">Privacy Policy</a>
+                <a class="text-on-surface-variant font-label-sm text-label-sm hover:text-primary transition-colors"
+                    href="#">Terms of Service</a>
+                <a class="text-on-surface-variant font-label-sm text-label-sm hover:text-primary transition-colors"
+                    href="#">Contact Us</a>
+            </div>
+            <div class="text-body-sm font-body-sm text-on-surface-variant text-center md:text-right">
+                © 2024 QuizFlow. Empowering Coaching Institutes.
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>

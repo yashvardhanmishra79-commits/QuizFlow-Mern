@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+
+<html class="h-full bg-surface-bright dark:bg-inverse-surface" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Quiz Management - QuizFlow</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "tertiary": "#3e3fcc",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "background": "#f9f9ff",
+                        "inverse-on-surface": "#ecf1ff",
+                        "on-surface": "#111c2d",
+                        "on-primary-fixed": "#00174b",
+                        "secondary-fixed": "#89f5e7",
+                        "surface-container-high": "#dee8ff",
+                        "surface-tint": "#0053db",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "surface-container-low": "#f0f3ff",
+                        "on-error-container": "#93000a",
+                        "secondary": "#006a61",
+                        "surface-dim": "#cfdaf2",
+                        "on-error": "#ffffff",
+                        "inverse-surface": "#263143",
+                        "on-surface-variant": "#434655",
+                        "tertiary-container": "#585be6",
+                        "surface-variant": "#d8e3fb",
+                        "on-tertiary": "#ffffff",
+                        "outline-variant": "#c3c6d7",
+                        "surface": "#f9f9ff",
+                        "primary": "#004ac6",
+                        "on-primary-container": "#eeefff",
+                        "on-background": "#111c2d",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed-dim": "#c0c1ff",
+                        "surface-container-highest": "#d8e3fb",
+                        "secondary-container": "#86f2e4",
+                        "surface-container": "#e7eeff",
+                        "on-tertiary-fixed-variant": "#2f2ebe",
+                        "on-secondary-fixed-variant": "#005049",
+                        "outline": "#737686",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed": "#00201d",
+                        "secondary-fixed-dim": "#6bd8cb",
+                        "inverse-primary": "#b4c5ff",
+                        "primary-fixed": "#dbe1ff",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#e1e0ff",
+                        "on-tertiary-fixed": "#07006c",
+                        "primary-container": "#2563eb",
+                        "on-secondary-container": "#006f66",
+                        "on-tertiary-container": "#f1eeff",
+                        "surface-bright": "#f9f9ff"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "space-sm": "8px",
+                        "space-2xl": "64px",
+                        "gutter": "24px",
+                        "space-lg": "24px",
+                        "container-max": "1280px",
+                        "space-xs": "4px",
+                        "space-md": "16px",
+                        "unit": "4px",
+                        "space-xl": "40px"
+                    },
+                    fontFamily: {
+                        "body-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    fontSize: {
+                        "body-sm": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+                        "label-md": ["14px", { lineHeight: "20px", letterSpacing: "0.05em", fontWeight: "600" }],
+                        "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "700" }],
+                        "headline-md": ["24px", { lineHeight: "32px", fontWeight: "600" }],
+                        "headline-lg-mobile": ["24px", { lineHeight: "32px", fontWeight: "700" }],
+                        "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+                        "label-sm": ["12px", { lineHeight: "16px", fontWeight: "500" }],
+                        "headline-xl": ["48px", { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700" }],
+                        "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }]
+                    }
+                }
+            }
+        };
+    </script>
+</head>
+<body class="flex h-full text-on-surface bg-surface font-body-md text-body-md overflow-hidden">
+<!-- SideNavBar (Shared Component) -->
+<nav class="hidden lg:flex flex-col h-screen fixed left-0 top-0 py-space-lg px-space-md w-64 z-40 bg-surface dark:bg-inverse-surface border-r border-outline-variant flat no shadows docked left-0 h-full w-64">
+<!-- Brand Header -->
+<div class="mb-space-xl px-space-sm">
+<h1 class="text-headline-md font-headline-md font-bold text-on-surface dark:text-inverse-on-surface">QuizFlow Admin</h1>
+<p class="text-label-sm font-label-sm text-on-surface-variant dark:text-surface-variant mt-space-xs">Coaching Portal</p>
+</div>
+<!-- Main Navigation -->
+<ul class="flex-1 space-y-space-xs">
+<li>
+<a class="flex items-center gap-space-sm px-space-sm py-space-sm text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant rounded-lg hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-label-md font-label-md">Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-space-sm px-space-sm py-space-sm text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant rounded-lg hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="text-label-md font-label-md">Batches</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-space-sm px-space-sm py-space-sm text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant rounded-lg hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="text-label-md font-label-md">Students</span>
+</a>
+</li>
+<!-- Active Tab -->
+<li>
+<a class="flex items-center gap-space-sm px-space-sm py-space-sm bg-primary-container dark:bg-primary text-on-primary-container dark:text-on-primary rounded-lg font-bold translate-x-1 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="quiz">quiz</span>
+<span class="text-label-md font-label-md">Quizzes</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-space-sm px-space-sm py-space-sm text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant rounded-lg hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+<span class="text-label-md font-label-md">Quiz Builder</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-space-sm px-space-sm py-space-sm text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant rounded-lg hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="text-label-md font-label-md">Settings</span>
+</a>
+</li>
+</ul>
+<!-- Footer Actions -->
+<div class="mt-auto space-y-space-sm">
+<button class="w-full bg-primary-container text-on-primary-container hover:brightness-90 transition-all font-label-md text-label-md py-space-sm rounded-lg flex items-center justify-center gap-space-sm shadow-sm">
+<span class="material-symbols-outlined text-sm">add</span>
+                Create New Quiz
+            </button>
+<ul class="border-t border-outline-variant pt-space-sm mt-space-sm">
+<li>
+<a class="flex items-center gap-space-sm px-space-sm py-space-sm text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="text-label-md font-label-md">Help Center</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-space-sm px-space-sm py-space-sm text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-variant rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="text-label-md font-label-md">Logout</span>
+</a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 flex flex-col h-full lg:ml-64 overflow-y-auto">
+<!-- Header area -->
+<header class="sticky top-0 z-30 bg-surface/90 backdrop-blur-md px-space-md lg:px-space-xl py-space-lg flex justify-between items-center border-b border-outline-variant/50">
+<div>
+<h2 class="text-headline-lg font-headline-lg hidden md:block text-on-surface">Quiz Management</h2>
+<h2 class="text-headline-lg-mobile font-headline-lg-mobile md:hidden text-on-surface">Quiz Management</h2>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-1">Manage, edit, and analyze your coaching assessments.</p>
+</div>
+<div class="flex items-center gap-space-md">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" data-icon="search">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-body-sm font-body-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 w-64 shadow-sm transition-all" placeholder="Search quizzes..." type="text"/>
+</div>
+<button class="bg-primary-container text-on-primary-container hover:brightness-90 transition-all font-label-md text-label-md px-space-lg py-2 rounded-lg flex items-center gap-space-sm shadow-sm hover:shadow-md transform hover:-translate-y-0.5">
+<span class="material-symbols-outlined text-[20px]" data-icon="add">add</span>
+<span class="hidden sm:inline">Create Quiz</span>
+</button>
+</div>
+</header>
+<!-- Page Content -->
+<div class="p-space-md lg:p-space-xl flex-1 max-w-container-max mx-auto w-full">
+<!-- Stats/Filters Row -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-space-lg gap-space-md">
+<div class="flex gap-space-sm">
+<button class="px-space-md py-1.5 rounded-full bg-primary-container text-on-primary-container font-label-sm text-label-sm shadow-sm border border-transparent">All Quizzes</button>
+<button class="px-space-md py-1.5 rounded-full bg-surface-container-lowest text-on-surface-variant font-label-sm text-label-sm border border-outline-variant hover:bg-surface-container-low transition-colors">Live</button>
+<button class="px-space-md py-1.5 rounded-full bg-surface-container-lowest text-on-surface-variant font-label-sm text-label-sm border border-outline-variant hover:bg-surface-container-low transition-colors">Drafts</button>
+</div>
+<div class="flex items-center gap-space-sm text-label-sm font-label-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">sort</span>
+<select class="bg-transparent border-none py-0 pl-1 pr-6 focus:ring-0 cursor-pointer">
+<option>Recently Added</option>
+<option>Title (A-Z)</option>
+<option>Performance (High-Low)</option>
+</select>
+</div>
+</div>
+<!-- Quiz Grid (Bento/Card Style) -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-space-lg">
+<!-- Card 1: Live Quiz -->
+<div class="bg-surface-container-lowest rounded-[16px] border border-outline-variant/60 shadow-[0_4px_6px_-1px_rgba(30,41,59,0.05)] hover:shadow-[0_10px_15px_-3px_rgba(30,41,59,0.1)] transition-all duration-300 flex flex-col group overflow-hidden">
+<div class="p-space-lg flex-1">
+<div class="flex justify-between items-start mb-space-md">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary-container/20 text-secondary font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                                Live
+                            </span>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+<h3 class="text-headline-md font-headline-md text-on-surface mb-1 group-hover:text-primary transition-colors">Advanced Physics: Kinematics</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant mb-space-lg">Batch: JEE Achievers 2024</p>
+<div class="grid grid-cols-2 gap-space-sm mb-space-lg">
+<div class="flex items-center gap-space-sm p-space-sm bg-surface-container-low rounded-lg">
+<span class="material-symbols-outlined text-outline text-[20px]" data-icon="format_list_numbered">format_list_numbered</span>
+<div>
+<p class="text-[10px] uppercase tracking-wider text-outline font-semibold">Questions</p>
+<p class="text-label-md font-label-md text-on-surface">45</p>
+</div>
+</div>
+<div class="flex items-center gap-space-sm p-space-sm bg-surface-container-low rounded-lg">
+<span class="material-symbols-outlined text-outline text-[20px]" data-icon="timer">timer</span>
+<div>
+<p class="text-[10px] uppercase tracking-wider text-outline font-semibold">Time Limit</p>
+<p class="text-label-md font-label-md text-on-surface">60 mins</p>
+</div>
+</div>
+</div>
+<div class="pt-space-md border-t border-outline-variant/40">
+<p class="text-[11px] text-on-surface-variant mb-1 font-medium">Performance Metrics</p>
+<div class="flex items-end gap-space-sm">
+<span class="text-headline-md font-headline-md text-primary font-bold">78%</span>
+<span class="text-body-sm font-body-sm text-outline pb-0.5">avg. score</span>
+<span class="ml-auto flex items-center text-[12px] text-secondary font-medium gap-0.5">
+<span class="material-symbols-outlined text-[14px]">trending_up</span> +2.4%
+                                </span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low p-space-sm flex justify-end gap-space-sm border-t border-outline-variant/30">
+<button class="px-space-md py-2 text-label-sm font-label-sm text-on-surface hover:bg-surface-container-highest rounded-md transition-colors">Edit</button>
+<button class="px-space-md py-2 text-label-sm font-label-sm bg-surface-container-lowest border border-outline-variant rounded-md hover:bg-surface-container-high transition-colors shadow-sm">View Results</button>
+</div>
+</div>
+<!-- Card 2: Draft Quiz -->
+<div class="bg-surface-container-lowest rounded-[16px] border border-outline-variant/60 shadow-[0_4px_6px_-1px_rgba(30,41,59,0.05)] hover:shadow-[0_10px_15px_-3px_rgba(30,41,59,0.1)] transition-all duration-300 flex flex-col group overflow-hidden">
+<div class="p-space-lg flex-1">
+<div class="flex justify-between items-start mb-space-md">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm border border-outline-variant/50">
+<span class="material-symbols-outlined text-[14px]">edit_document</span>
+                                Draft
+                            </span>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+<h3 class="text-headline-md font-headline-md text-on-surface mb-1 group-hover:text-primary transition-colors">Organic Chemistry Mock Test</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant mb-space-lg">Batch: NEET Pro (Target)</p>
+<div class="grid grid-cols-2 gap-space-sm mb-space-lg">
+<div class="flex items-center gap-space-sm p-space-sm bg-surface-container-low rounded-lg opacity-80">
+<span class="material-symbols-outlined text-outline text-[20px]" data-icon="format_list_numbered">format_list_numbered</span>
+<div>
+<p class="text-[10px] uppercase tracking-wider text-outline font-semibold">Questions</p>
+<p class="text-label-md font-label-md text-on-surface">90</p>
+</div>
+</div>
+<div class="flex items-center gap-space-sm p-space-sm bg-surface-container-low rounded-lg opacity-80">
+<span class="material-symbols-outlined text-outline text-[20px]" data-icon="timer">timer</span>
+<div>
+<p class="text-[10px] uppercase tracking-wider text-outline font-semibold">Time Limit</p>
+<p class="text-label-md font-label-md text-on-surface">180 mins</p>
+</div>
+</div>
+</div>
+<div class="pt-space-md border-t border-outline-variant/40">
+<div class="flex items-center gap-space-sm text-on-surface-variant bg-surface-variant/30 p-2 rounded text-body-sm font-body-sm">
+<span class="material-symbols-outlined text-[18px]">info</span>
+<span>Needs review before publishing.</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low p-space-sm flex justify-end gap-space-sm border-t border-outline-variant/30">
+<button class="px-space-md py-2 text-label-sm font-label-sm text-on-surface hover:bg-surface-container-highest rounded-md transition-colors">Delete</button>
+<button class="px-space-md py-2 text-label-sm font-label-sm bg-primary text-on-primary rounded-md hover:bg-primary-fixed-variant transition-colors shadow-sm flex items-center gap-1">
+                             Continue Editing <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card 3: Archived Quiz -->
+<div class="bg-surface-container-lowest rounded-[16px] border border-outline-variant/60 shadow-[0_4px_6px_-1px_rgba(30,41,59,0.05)] transition-all duration-300 flex flex-col group overflow-hidden opacity-90">
+<div class="p-space-lg flex-1">
+<div class="flex justify-between items-start mb-space-md">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">inventory_2</span>
+                                Archived
+                            </span>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+<h3 class="text-headline-md font-headline-md text-on-surface mb-1 text-on-surface-variant">Weekly Test: Linear Algebra</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant mb-space-lg">Batch: Foundation Batch C</p>
+<div class="grid grid-cols-2 gap-space-sm mb-space-lg grayscale-[50%]">
+<div class="flex items-center gap-space-sm p-space-sm bg-surface-container-low rounded-lg">
+<span class="material-symbols-outlined text-outline text-[20px]" data-icon="format_list_numbered">format_list_numbered</span>
+<div>
+<p class="text-[10px] uppercase tracking-wider text-outline font-semibold">Questions</p>
+<p class="text-label-md font-label-md text-on-surface-variant">25</p>
+</div>
+</div>
+<div class="flex items-center gap-space-sm p-space-sm bg-surface-container-low rounded-lg">
+<span class="material-symbols-outlined text-outline text-[20px]" data-icon="timer">timer</span>
+<div>
+<p class="text-[10px] uppercase tracking-wider text-outline font-semibold">Time Limit</p>
+<p class="text-label-md font-label-md text-on-surface-variant">45 mins</p>
+</div>
+</div>
+</div>
+<div class="pt-space-md border-t border-outline-variant/40">
+<p class="text-[11px] text-on-surface-variant mb-1 font-medium">Final Performance</p>
+<div class="flex items-end gap-space-sm">
+<span class="text-headline-md font-headline-md text-on-surface-variant font-bold">62%</span>
+<span class="text-body-sm font-body-sm text-outline pb-0.5">avg. score</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low p-space-sm flex justify-end gap-space-sm border-t border-outline-variant/30">
+<button class="px-space-md py-2 text-label-sm font-label-sm text-on-surface hover:bg-surface-container-highest rounded-md transition-colors">Restore</button>
+<button class="px-space-md py-2 text-label-sm font-label-sm bg-surface-container-lowest border border-outline-variant rounded-md hover:bg-surface-container-high transition-colors shadow-sm">View Report</button>
+</div>
+</div>
+</div>
+<!-- Bottom spacing for footer -->
+<div class="h-space-2xl"></div>
+</div>
+</main>
+</body></html>
