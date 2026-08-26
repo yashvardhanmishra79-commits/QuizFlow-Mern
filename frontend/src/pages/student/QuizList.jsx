@@ -24,9 +24,7 @@ function QuizList() {
   useEffect(() => {
     const storedUserData = localStorage.getItem("userData");
 
-    // --------------------------------------------
     // CHECK LOGIN
-    // --------------------------------------------
     if (!storedUserData) {
       alert("Please login to access quizzes");
       navigate("/login");
@@ -35,9 +33,7 @@ function QuizList() {
 
     let userData;
 
-    // --------------------------------------------
     // PARSE USER DATA
-    // --------------------------------------------
     try {
       userData = JSON.parse(storedUserData);
     } catch (err) {
@@ -53,9 +49,7 @@ function QuizList() {
     console.log("USER BATCH:", userData.batch);
     console.log("=================================");
 
-    // --------------------------------------------
     // CHECK BATCH
-    // --------------------------------------------
     if (!userData.batch) {
       console.error("Batch is missing from userData");
 
@@ -67,19 +61,7 @@ function QuizList() {
       return;
     }
 
-    // --------------------------------------------
     // GET BATCH ID
-    //
-    // Handles both:
-    //
-    // batch: "68xxxxxxxxxxxxxxxxxxxxxxxx"
-    //
-    // and:
-    //
-    // batch: {
-    //   _id: "68xxxxxxxxxxxxxxxxxxxxxxxx"
-    // }
-    // --------------------------------------------
     const batchId =
       typeof userData.batch === "object"
         ? userData.batch?._id
@@ -87,9 +69,7 @@ function QuizList() {
 
     console.log("BATCH ID USED FOR API:", batchId);
 
-    // --------------------------------------------
     // VALIDATE BATCH ID
-    // --------------------------------------------
     if (!batchId) {
       console.error("Invalid batch:", userData.batch);
 
@@ -98,15 +78,10 @@ function QuizList() {
       return;
     }
 
-    // --------------------------------------------
     // FETCH QUIZZES
-    // --------------------------------------------
     const getData = async () => {
       try {
-        console.log(
-          "GET:",
-          `/quiz/${batchId}`
-        );
+        console.log("GET:", `/quiz/${batchId}`);
 
         const response = await api.get(`/quiz/${batchId}`);
 
@@ -123,8 +98,7 @@ function QuizList() {
           setQuizzes([]);
 
           setError(
-            response.data?.message ||
-              "Error in getting quizzes."
+            response.data?.message || "Error in getting quizzes."
           );
         }
       } catch (err) {
@@ -158,7 +132,6 @@ function QuizList() {
     console.log("START QUIZ ID:", quizId);
     console.log("=================================");
 
-    // No ID
     if (!quizId) {
       console.error("Quiz does not have an _id");
 
@@ -166,7 +139,6 @@ function QuizList() {
       return;
     }
 
-    // MongoDB ObjectId validation
     const isValidObjectId =
       /^[a-fA-F0-9]{24}$/.test(String(quizId));
 
@@ -183,10 +155,6 @@ function QuizList() {
       return;
     }
 
-    // --------------------------------------------
-    // IMPORTANT:
-    // Only use MongoDB _id
-    // --------------------------------------------
     navigate(`/quiz/${quizId}/solve`);
   };
 
@@ -228,48 +196,32 @@ function QuizList() {
   return (
     <div className="quiz-list-page">
 
-      {/* ========================================
-          HEADER
-      ======================================== */}
+      {/* HEADER */}
       <div className="page-header">
-
         <div className="header-content">
-          <h1>
-            Available Quizzes
-          </h1>
+          <h1>Available Quizzes</h1>
 
           <p>
             Select a quiz to start solving
           </p>
         </div>
 
-        {/* ======================================
-            FILTER BUTTONS
-        ====================================== */}
+        {/* FILTER BUTTONS */}
         <div className="filter-tabs">
-
           <button
             className={
-              filter === "all"
-                ? "active"
-                : ""
+              filter === "all" ? "active" : ""
             }
-            onClick={() =>
-              setFilter("all")
-            }
+            onClick={() => setFilter("all")}
           >
             All
           </button>
 
           <button
             className={
-              filter === "attempted"
-                ? "active"
-                : ""
+              filter === "attempted" ? "active" : ""
             }
-            onClick={() =>
-              setFilter("attempted")
-            }
+            onClick={() => setFilter("attempted")}
           >
             Attempted
           </button>
@@ -286,184 +238,164 @@ function QuizList() {
           >
             Not Attempted
           </button>
-
         </div>
       </div>
 
-      {/* ========================================
-          ERROR
-      ======================================== */}
+      {/* ERROR */}
       {error && (
         <div className="empty-state">
-
           <MdQuiz className="empty-icon" />
 
           <h3>
             Unable to load quizzes
           </h3>
 
-          <p>
-            {error}
-          </p>
-
+          <p>{error}</p>
         </div>
       )}
 
-      {/* ========================================
-          QUIZ GRID
-      ======================================== */}
+      {/* QUIZ GRID */}
       {!error && (
         <div className="quiz-grid">
 
-          {filtered.map((quiz) => (
+          {filtered.map((quiz) => {
 
-            <div
-              key={quiz._id}
-              className="quiz-card"
-            >
+            // ====================================
+            // CALCULATE VALUES FROM ACTUAL SCHEMA
+            // ====================================
 
-              {/* ==================================
-                  CARD HEADER
-              ================================== */}
-              <div className="quiz-card-header">
+            const totalQuestions =
+              Array.isArray(quiz.questions)
+                ? quiz.questions.length
+                : 0;
 
-                <div className="quiz-icon">
-                  <MdQuiz />
-                </div>
+            const totalMarks =
+              totalQuestions *
+              (Number(quiz.correctMarks) || 0);
 
-                <div className="quiz-meta">
-
-                  <span className="quiz-subject">
-                    {quiz.subject ||
-                      "General"}
-                  </span>
-
-                  <span className="quiz-details">
-                    {quiz.totalQuestions ??
-                      0}{" "}
-                    Questions •{" "}
-                    {quiz.totalMarks ??
-                      0}{" "}
-                    Marks •{" "}
-                    {quiz.timeLimit ??
-                      0}{" "}
-                    min
-                  </span>
-
-                </div>
-
-              </div>
-
-              {/* ==================================
-                  TITLE
-              ================================== */}
-              <h3 className="quiz-title">
-                {quiz.title ||
-                  "Untitled Quiz"}
-              </h3>
-
-              {/* ==================================
-                  STATUS
-              ================================== */}
-              <div className="quiz-status-row">
-
-                <div className="status-badge">
-
-                  {quiz.attempted ? (
-                    <>
-                      <MdCheckCircle
-                        className="status-icon success"
-                      />
-
-                      <span>
-                        Attempted
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <MdLockClock
-                        className="status-icon pending"
-                      />
-
-                      <span>
-                        Not Attempted
-                      </span>
-                    </>
-                  )}
-
-                </div>
-
-                {/* ================================
-                    MARKS
-                ================================= */}
-                <div className="marks-display">
-
-                  {quiz.attempted ? (
-                    <>
-                      <span className="marks-obtained">
-                        {quiz.marksObtained ??
-                          0}
-                      </span>
-
-                      <span className="marks-separator">
-                        /
-                      </span>
-
-                      <span className="marks-total">
-                        {quiz.totalMarks ??
-                          0}
-                      </span>
-                    </>
-                  ) : (
-                    <span className="na-text">
-                      N/A
-                    </span>
-                  )}
-
-                </div>
-
-              </div>
-
-              {/* ==================================
-                  START QUIZ
-              ================================== */}
-              <button
-                className={`start-quiz-btn ${
-                  quiz.attempted
-                    ? "reattempt"
-                    : ""
-                }`}
-                onClick={() =>
-                  handleStartQuiz(
-                    quiz._id
-                  )
-                }
+            return (
+              <div
+                key={quiz._id}
+                className="quiz-card"
               >
 
-                {quiz.attempted ? (
-                  <MdRefresh />
-                ) : (
-                  <MdPlayArrow />
-                )}
+                {/* CARD HEADER */}
+                <div className="quiz-card-header">
 
-                <span>
-                  {quiz.attempted
-                    ? "Re-attempt"
-                    : "Start Quiz"}
-                </span>
+                  <div className="quiz-icon">
+                    <MdQuiz />
+                  </div>
 
-              </button>
+                  <div className="quiz-meta">
 
-            </div>
+                    <span className="quiz-subject">
+                      {quiz.subject || "General"}
+                    </span>
 
-          ))}
+                    <span className="quiz-details">
+                      {totalQuestions} Questions •{" "}
+                      {totalMarks} Marks • No limit
+                    </span>
+
+                  </div>
+
+                </div>
+
+                {/* TITLE */}
+                <h3 className="quiz-title">
+                  {quiz.title || "Untitled Quiz"}
+                </h3>
+
+                {/* STATUS */}
+                <div className="quiz-status-row">
+
+                  <div className="status-badge">
+
+                    {quiz.attempted ? (
+                      <>
+                        <MdCheckCircle
+                          className="status-icon success"
+                        />
+
+                        <span>
+                          Attempted
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <MdLockClock
+                          className="status-icon pending"
+                        />
+
+                        <span>
+                          Not Attempted
+                        </span>
+                      </>
+                    )}
+
+                  </div>
+
+                  {/* MARKS */}
+                  <div className="marks-display">
+
+                    {quiz.attempted ? (
+                      <>
+                        <span className="marks-obtained">
+                          {quiz.marksObtained ?? 0}
+                        </span>
+
+                        <span className="marks-separator">
+                          /
+                        </span>
+
+                        <span className="marks-total">
+                          {totalMarks}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="na-text">
+                        N/A
+                      </span>
+                    )}
+
+                  </div>
+
+                </div>
+
+                {/* START QUIZ */}
+                <button
+                  className={`start-quiz-btn ${
+                    quiz.attempted
+                      ? "reattempt"
+                      : ""
+                  }`}
+                  onClick={() =>
+                    handleStartQuiz(quiz._id)
+                  }
+                >
+
+                  {quiz.attempted ? (
+                    <MdRefresh />
+                  ) : (
+                    <MdPlayArrow />
+                  )}
+
+                  <span>
+                    {quiz.attempted
+                      ? "Re-attempt"
+                      : "Start Quiz"}
+                  </span>
+
+                </button>
+
+              </div>
+            );
+          })}
 
         </div>
       )}
 
-      {/* ========================================
-          NO QUIZZES
-      ======================================== */}
+      {/* NO QUIZZES */}
       {!error &&
         filtered.length === 0 && (
           <div className="empty-state">
