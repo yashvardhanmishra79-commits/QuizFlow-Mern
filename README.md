@@ -1,295 +1,153 @@
-# QuizFlow - Quiz Management Platform
+# QuizFlow — MERN Quiz Management Platform
 
-A modern, full-stack quiz management platform built for coaching institutes. Features include quiz creation, batch management, student assessments, and detailed analytics.
+QuizFlow is a full-stack quiz management application built with React, Node.js, Express, and MongoDB. It provides separate student and admin-facing screens for organizing batches, managing quizzes, and reviewing quiz results.
 
-## Tech Stack
+**Live demo:** https://quizflow-frontend-9ieb.onrender.com/  
+**Source code:** https://github.com/yashvardhanmishra79-commits/QuizFlow-Mern
 
-**Frontend:**
-- React 18 + Vite
-- React Router v6
-- Axios for API calls
-- React Icons
-- CSS Variables for theming
-
-**Backend:**
-- Node.js + Express
-- MongoDB + Mongoose
-- JWT-ready authentication structure
-- CORS enabled
-
----
-
-## Project Structure
-
-```
-QuizFlow/
-├── backend/
-│   ├── index.js              # Entry point, DB connection, admin seeding
-│   ├── models/
-│   │   ├── User.js           # User schema (student/admin)
-│   │   ├── Quiz.js           # Quiz schema
-│   │   └── Batch.js          # Batch schema
-│   ├── routes/
-│   │   ├── userRoutes.js     # Auth & user management
-│   │   ├── quizRoutes.js     # Quiz CRUD
-│   │   └── batchRoutes.js    # Batch CRUD
-│   ├── package.json
-│   └── .env                  # Environment variables
-│
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   └── Header.jsx    # Dynamic header with auth state
-│   │   ├── contexts/
-│   │   │   └── AuthContext.jsx  # Global auth state
-│   │   ├── layouts/
-│   │   │   ├── PublicLayout.jsx
-│   │   │   └── AdminLayout.jsx
-│   │   ├── pages/
-│   │   │   ├── Home.jsx           # Landing page
-│   │   │   ├── Login.jsx          # Login with role-based redirect
-│   │   │   ├── About.jsx          # About page
-│   │   │   ├── Contact.jsx        # Contact page with form & FAQ
-│   │   │   ├── student/
-│   │   │   │   ├── QuizList.jsx
-│   │   │   │   ├── QuizSolve.jsx
-│   │   │   │   └── QuizResult.jsx
-│   │   │   └── admin/
-│   │   │       ├── AdminDashboard.jsx
-│   │   │       ├── AdminQuizBuilder.jsx
-│   │   │       ├── AdminManageStudents.jsx
-│   │   │       ├── AdminManageBatches.jsx
-│   │   │       └── AdminManageQuizzes.jsx
-│   │   ├── api/
-│   │   │   └── api.jsx           # Axios instance
-│   │   ├── App.jsx               # Routes configuration
-│   │   ├── main.jsx              # Entry point
-│   │   └── index.css             # Global styles & CSS variables
-│   ├── package.json
-│   └── vite.config.js
-│
-└── README.md
-```
-
----
+> **Security note:** This repository is a learning project, not production-ready authentication. The current backend stores passwords as plain text and does not enforce server-side authorization on management endpoints. Do not use real passwords, personal data, or expose this deployment to untrusted users until these issues are fixed.
 
 ## Features
 
-### Authentication & Authorization
-- Role-based access control (Admin / Student)
-- Auto-creates default admin on first backend startup
-- Session persistence via localStorage
-- Protected routes for admin panel
+### Admin-facing screens
+- Dashboard overview
+- Create, edit, and delete quizzes
+- Create and manage batches
+- Manage student records
 
-### Admin Panel
-- **Dashboard** - Overview statistics
-- **Quiz Builder** - Create quizzes with questions, marking schemes, time limits
-- **Manage Quizzes** - List, edit, delete quizzes
-- **Manage Batches** - Create batches, assign students
-- **Manage Students** - View all students, batch assignments
+### Student-facing screens
+- Browse available quizzes
+- Take timed quizzes
+- View score breakdowns and answer explanations
 
-### Student Portal
-- **Quiz List** - View assigned quizzes by batch
-- **Solve Quiz** - Timed quiz interface with navigation
-- **Quiz Results** - Detailed score breakdown, correct/incorrect answers
+### Public pages
+- Home, About, and Contact pages
+- React Router-based navigation
+- Shared API client using Axios
 
-### Public Pages
-- **Home** - Landing page with features & CTA
-- **About** - Mission, values, stats, team
-- **Contact** - Contact form, info cards, FAQ accordion
+## Tech stack
 
----
+| Layer | Technologies |
+|---|---|
+| Frontend | React, Vite, React Router, Axios, React Icons |
+| Backend | Node.js, Express |
+| Database | MongoDB, Mongoose |
+| Deployment | Render (frontend demo) |
 
-## Getting Started
+## Repository structure
+
+```text
+QuizFlow-Mern/
+├── backend/
+│   ├── models/       # User, Quiz, and Batch schemas
+│   ├── routes/       # User, quiz, and batch endpoints
+│   ├── index.js      # Express entry point and database connection
+│   └── package.json
+├── frontend/
+│   ├── src/
+│   │   ├── api/      # Axios API client
+│   │   ├── components/
+│   │   ├── contexts/
+│   │   ├── layouts/
+│   │   └── pages/
+│   └── package.json
+└── README.md
+```
+
+## Run locally
 
 ### Prerequisites
-- Node.js 18+
-- MongoDB (local or Atlas)
-- npm or yarn
+- Node.js and npm
+- A MongoDB database, local or MongoDB Atlas
+- Git
 
-### Backend Setup
-
-```bash
-cd backend
-
-# Install dependencies
-npm install
-
-# Configure environment
-cp .env-example .env
-# Edit .env with your MongoDB URI and PORT
-
-# Start development server
-npm run dev
-```
-
-**Default Admin Created on First Run:**
-- Email: `admin@quizflow.com`
-- Password: `admin123`
-
-### Frontend Setup
+### 1. Clone the repository
 
 ```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
+git clone https://github.com/yashvardhanmishra79-commits/QuizFlow-Mern.git
+cd QuizFlow-Mern
 ```
 
-Frontend runs at `http://localhost:5173` (default Vite port)
-Backend runs at `http://localhost:4400` (configurable via .env)
+### 2. Configure and start the backend
 
----
+Create `backend/.env` with your own MongoDB connection string:
 
-## Environment Variables
-
-### Backend (.env)
 ```env
-MONGO_URL=mongodb://localhost:27017/quizflow
+MONGO_URL=mongodb://127.0.0.1:27017/quizflow
 PORT=4400
 ```
 
----
+Use a MongoDB Atlas URI instead if you are using Atlas. Do not commit your `.env` file or put credentials in source code.
 
-## API Endpoints
-
-### Authentication
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/user/login` | User login |
-| POST | `/user/add-user` | Create new user (admin only) |
-| GET | `/user/get-all-students` | List all students |
-
-### Quizzes
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/quiz/add-quiz` | Create quiz |
-| POST | `/quiz/delete-quiz` | Delete quiz |
-| GET | `/quiz/get-all` | List all quizzes |
-| GET | `/quiz/:batchId` | Get quizzes by batch |
-| GET | `/quiz/single/:quizId` | Get single quiz |
-
-### Batches
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/batch/add-batch` | Create batch |
-| GET | `/batch/get-all` | List all batches |
-| GET | `/batch/:batchId` | Get batch details |
-
----
-
-## User Roles
-
-### Admin
-- Access to `/admin/*` routes
-- Create/manage quizzes, batches, students
-- View all analytics
-
-### Student
-- Access to `/quizzes`, `/quiz/:id/solve`, `/quiz/:id/result`
-- Take assigned quizzes
-- View personal results
-
----
-
-## Key Implementation Details
-
-### Auto Admin Seeding
-On backend startup, `seedAdminUser()` checks for existing admin. If none exists, creates:
-```
-Email: admin@quizflow.com
-Password: admin123
-Role: admin
-```
-
-### Header Behavior
-- **Unauthenticated**: Shows "Login" button
-- **Authenticated Student**: Shows "Solve Quiz" + "Logout"
-- **Authenticated Admin**: Shows "Admin Panel" + "Logout"
-
-### Login Redirect Logic
-```javascript
-if (userData.role === "admin") {
-  navigate("/admin");
-} else {
-  navigate("/quizzes");
-}
-```
-
-### CSS Variables (Design System)
-Defined in `frontend/src/index.css`:
-- Colors: Primary, Secondary, Success, Error, Warning
-- Typography: Inter font family
-- Spacing, Radius, Shadows, Transitions
-- Dark mode ready structure
-
----
-
-## Development
-
-### Run Both Servers
 ```bash
-# Terminal 1 - Backend
-cd backend && npm run dev
-
-# Terminal 2 - Frontend
-cd frontend && npm run dev
+cd backend
+npm install
+npm run dev
 ```
 
-### Build for Production
+The backend health endpoint is available at `http://localhost:4400/health` when the server starts successfully.
+
+### 3. Configure and start the frontend
+
+The frontend reads its API base URL from Vite's `VITE_API_URL` environment variable. Create `frontend/.env`:
+
+```env
+VITE_API_URL=http://localhost:4400
+```
+
+Then, in a second terminal:
+
 ```bash
-cd frontend && npm run build
-# Output in frontend/dist/
+cd frontend
+npm install
+npm run dev
 ```
 
----
+Vite normally serves the frontend at `http://localhost:5173`. If Vite selects another port, use the URL printed in the terminal.
 
-## Default Test Accounts
+## Useful commands
 
-After first backend run:
-- **Admin**: `admin@quizflow.com` / `admin123`
-- Create students via Admin Panel → Manage Students
+Run these from the relevant folder.
 
----
-
-## Folder Aliases (Vite)
-```javascript
-// vite.config.js
-resolve: {
-  alias: {
-    '@': '/src',
-    '@components': '/src/components',
-    '@pages': '/src/pages',
-    '@api': '/src/api',
-  }
-}
+**Backend**
+```bash
+npm install
+npm run dev
 ```
 
----
+**Frontend**
+```bash
+npm install
+npm run dev
+npm run build
+npm run lint
+```
 
-## Future Enhancements
-- [ ] JWT token authentication with refresh tokens
-- [ ] Email verification & password reset
-- [ ] AI-powered question generation
-- [ ] Real-time quiz sessions
-- [ ] Export results to PDF/Excel
-- [ ] Student performance analytics charts
-- [ ] Multi-language support
-- [ ] Dark mode toggle
+## API route overview
 
----
+These are the routes currently declared in the backend. Request methods and response shapes should be checked in the corresponding route file before integrating another client.
+
+| Area | Routes |
+|---|---|
+| Users | `POST /user/login`, `POST /user/add-user`, `GET /user/get-all-students`, `POST /user/update-user`, `POST /user/delete-user` |
+| Quizzes | `POST /quiz/add-quiz`, `POST /quiz/delete-quiz`, `GET /quiz/get-all`, `GET /quiz/:batchId`, `GET /quiz/single/:quizId` |
+| Batches | `POST /batch/add-batch`, `POST /batch/delete-batch`, `POST /batch/update-batch`, `GET /batch/get-all` |
+| Health | `GET /health` |
+
+## Known limitations and next steps
+
+- Hash passwords and migrate existing plain-text password records safely.
+- Add server-side authentication and role checks to every protected endpoint.
+- Remove public privilege assignment: user registration must never allow a client to choose the `admin` role.
+- Add input validation, consistent HTTP status codes, and centralized error handling.
+- Add automated backend tests and replace the placeholder test script.
+- Add a documented, secure initial-admin provisioning process.
+- Configure CORS for the exact frontend origin in each environment.
+
+## Project status
+
+This is an educational full-stack project that demonstrates CRUD workflows and client/server integration. The security limitations above must be resolved before production use.
 
 ## License
 
-MIT License - Feel free to use for educational and commercial projects.
-
----
-
-## Support
-
-For issues or feature requests, please create an issue in the repository.
-
-**Contact:** support@quizflow.com
+No license file was found during this README review. Add a license file before describing the project as open source or granting reuse permissions.
