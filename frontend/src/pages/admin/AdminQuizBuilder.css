@@ -363,3 +363,268 @@
     outline: none;
     background-color: transparent;
 }
+
+/* =========================================
+   AI Quiz Generator Banner & Modal
+========================================= */
+
+.quiz-notification-banner {
+    background-color: var(--primary-light);
+    border: 1px solid var(--border-primary);
+    color: var(--primary);
+    padding: 14px 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 15px;
+    font-weight: 500;
+    box-shadow: var(--shadow-sm);
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+.quiz-notification-close {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 2px;
+    border-radius: 4px;
+}
+
+.quiz-notification-close:hover {
+    background-color: rgba(0, 74, 198, 0.1);
+}
+
+.ai-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: var(--overlay);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.ai-modal-card {
+    background-color: white;
+    width: 100%;
+    max-width: 580px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    overflow: hidden;
+    animation: modalPop 0.2s ease-out;
+}
+
+@keyframes modalPop {
+    from {
+        opacity: 0;
+        transform: scale(0.96) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.ai-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+}
+
+.ai-modal-title-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ai-modal-icon {
+    font-size: 26px;
+    color: var(--primary);
+}
+
+.ai-modal-title-group h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.ai-modal-close-btn {
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+
+.ai-modal-close-btn:hover:not(:disabled) {
+    color: var(--danger);
+    background-color: var(--danger-light);
+}
+
+.ai-modal-close-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.ai-modal-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.ai-modal-error {
+    background-color: var(--error-light);
+    color: var(--error);
+    border: 1px solid rgba(220, 38, 38, 0.3);
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.ai-modal-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ai-modal-field label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.ai-required {
+    color: var(--danger);
+}
+
+.ai-modal-field input,
+.ai-modal-field select {
+    height: 42px;
+    border: 1.5px solid var(--border-dark);
+    border-radius: var(--radius-sm);
+    padding: 0 12px;
+    font-size: 15px;
+    color: var(--text-primary);
+    background-color: var(--bg);
+    outline: none;
+    transition: var(--transition);
+}
+
+.ai-modal-field input:focus,
+.ai-modal-field select:focus {
+    border-color: var(--primary);
+    background-color: white;
+    box-shadow: var(--shadow-primary);
+}
+
+.ai-modal-field input:disabled,
+.ai-modal-field select:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.ai-modal-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.ai-modal-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+}
+
+.ai-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 10px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+.ai-modal-btn-cancel {
+    padding: 10px 18px;
+    background-color: transparent;
+    border: 1.5px solid var(--border-dark);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.ai-modal-btn-cancel:hover:not(:disabled) {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.ai-modal-btn-cancel:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.ai-modal-btn-generate {
+    padding: 10px 22px;
+    background-color: var(--primary);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    box-shadow: var(--shadow-primary);
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ai-modal-btn-generate:hover:not(:disabled) {
+    background-color: var(--primary-hover);
+}
+
+.ai-modal-btn-generate:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.ai-btn-loading {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ai-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: aiSpin 0.7s linear infinite;
+}
+
+@keyframes aiSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}

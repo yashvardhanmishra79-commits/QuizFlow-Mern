@@ -1,6 +1,51 @@
 import express from "express";
 import Quiz from "../models/Quiz.js";
+import { generateQuizWithAI } from "../services/geminiService.js";
+
 const router = express.Router();
+
+router.post("/generate-ai-quiz", async (req, res) => {
+  try {
+    const {
+      topic,
+      batch,
+      difficulty,
+      questionCount,
+      correctMarks,
+      incorrectMarks,
+    } = req.body;
+
+    if (!topic || typeof topic !== "string" || !topic.trim()) {
+      return res.status(400).send({
+        success: false,
+        message: "Please provide a topic for the quiz.",
+      });
+    }
+
+    const quizData = await generateQuizWithAI({
+      topic: topic.trim(),
+      batch,
+      difficulty,
+      questionCount,
+      correctMarks,
+      incorrectMarks,
+    });
+
+    res.send({
+      success: true,
+      message: "AI Quiz generated successfully",
+      data: quizData,
+    });
+  } catch (error) {
+    console.error("AI Quiz generation error:", error.message);
+    const status = error.statusCode || 500;
+    res.status(status).send({
+      success: false,
+      message: error.message || "Failed to generate quiz with AI",
+    });
+  }
+});
+
 router.post("/add-quiz", async (req, res) => {
   const data = req.body;
   const newQuiz = new Quiz(data);

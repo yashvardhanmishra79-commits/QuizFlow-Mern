@@ -11,7 +11,6 @@ function useQuiz() {
       explanation: "",
     },
   ]);
-
   const [quizSettings, setQuizSetting] = useState({
     quizTitle: "",
     batch: "",
@@ -71,6 +70,34 @@ function useQuiz() {
     setQuestions(temp);
   }
 
+  function removeQuestion(index) {
+    if (questions.length <= 1) {
+      alert("A quiz must have at least one question.");
+      return;
+    }
+    setQuestions(questions.filter((_, i) => i !== index));
+  }
+
+  function populateQuizData(data) {
+    if (data.title) {
+      setQuizSetting((prev) => ({
+        ...prev,
+        quizTitle: data.title,
+        batch: data.batch || prev.batch,
+        correctMarks: data.correctMarks !== undefined ? data.correctMarks : prev.correctMarks,
+        incorrectMarks: data.incorrectMarks !== undefined ? data.incorrectMarks : prev.incorrectMarks,
+      }));
+    }
+    if (Array.isArray(data.questions) && data.questions.length > 0) {
+      setQuestions(data.questions);
+    }
+  }
+
+  async function generateAiQuiz(payload) {
+    const response = await api.post("/quiz/generate-ai-quiz", payload);
+    return response.data;
+  }
+
   async function handleSubmit() {
     const data = {
       title: quizSettings.quizTitle,
@@ -89,14 +116,19 @@ function useQuiz() {
 
   return {
     questions,
+    setQuestions,
     addQuestion,
+    removeQuestion,
     handleQuestionChange,
     handleQuizOptionChange,
     handleMarkCorrectOption,
     quizSettings,
+    setQuizSetting,
     handleQuizSettingsChange,
     handleSubmit,
     batches,
+    populateQuizData,
+    generateAiQuiz,
   };
 }
 
