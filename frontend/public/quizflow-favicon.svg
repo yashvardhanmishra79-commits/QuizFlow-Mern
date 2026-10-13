@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">QuizFlow</title>
+  <desc id="desc">A modern purple and blue Q mark with a quiz check.</desc>
+  <defs>
+    <linearGradient id="tile" x1="24" y1="18" x2="232" y2="240" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#17152E"/>
+      <stop offset="1" stop-color="#0A1020"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="53" y1="47" x2="203" y2="207" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#C4B5FD"/>
+      <stop offset="0.52" stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#67E8F9"/>
+    </linearGradient>
+    <linearGradient id="tick" x1="94" y1="112" x2="164" y2="161" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F5F3FF"/>
+      <stop offset="1" stop-color="#C4B5FD"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="66" fill="url(#tile)"/>
+  <rect x="8.75" y="8.75" width="238.5" height="238.5" rx="65.25" fill="none" stroke="#A78BFA" stroke-opacity=".24" stroke-width="1.5"/>
+  <circle cx="124" cy="119" r="68" fill="none" stroke="url(#mark)" stroke-width="15"/>
+  <path d="M171 168 L205 202" fill="none" stroke="url(#mark)" stroke-width="16" stroke-linecap="round"/>
+  <path d="M91 119 L113 140 L153 97" fill="none" stroke="url(#tick)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="197" cy="57" r="5" fill="#67E8F9"/>
+  <path d="M198 39 V45 M198 69 V75 M180 57 H186 M210 57 H216" stroke="#A78BFA" stroke-width="3" stroke-linecap="round" opacity=".9"/>
+</svg>

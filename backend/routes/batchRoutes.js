@@ -1,8 +1,9 @@
 import express from "express";
 import Batch from "../models/Batch.js";
+import { requireAdmin } from "../middleware/auth.js";
 const router = express.Router();
 // add-batch: POST
-router.post("/add-batch", async (req, res) => {
+router.post("/add-batch", requireAdmin, async (req, res) => {
   const data = req.body;
   const newBatch = new Batch(data);
   const newBatchData = await newBatch.save();
@@ -13,13 +14,13 @@ router.post("/add-batch", async (req, res) => {
   });
 });
 
-router.post("/delete-batch", async (req, res) => {
+router.post("/delete-batch", requireAdmin, async (req, res) => {
   const { batchId } = req.body;
   await Batch.findByIdAndDelete(batchId);
   res.send({ success: true, message: "Batch Deleted Successfully" });
 });
 
-router.post("/update-batch", async (req, res) => {
+router.post("/update-batch", requireAdmin, async (req, res) => {
   const { batchId, name } = req.body;
   await Batch.findByIdAndUpdate(batchId, { name });
   res.send({ success: true, message: "Batch Updated Successfully" });

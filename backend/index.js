@@ -1,9 +1,9 @@
 import express from "express";
 import mongoose from "mongoose";
-import User from "./models/User.js";
 import userRoutes from "./routes/userRoutes.js";
 import batchRoutes from "./routes/batchRoutes.js";
 import quizRoutes from "./routes/quizRoutes.js";
+import attemptRoutes from "./routes/attemptRoutes.js";
 import dotenv from "dotenv";
 import cors from "cors";
 
@@ -16,31 +16,8 @@ async function connectToDB() {
       process.env.MONGO_URL || "mongodb://localhost:27017/quizflow";
     await mongoose.connect(MONGO_URL);
     console.log("✅ Connected To DB!!...");
-    await seedAdminUser();
   } catch (err) {
-    console.log("❌ DB Connection Failed...", err);
-  }
-}
-
-async function seedAdminUser() {
-  try {
-    const adminExists = await User.findOne({ role: "admin" });
-    if (!adminExists) {
-      const adminUser = new User({
-        name: "Admin",
-        email: "admin@quizflow.com",
-        password: "admin123",
-        role: "admin",
-      });
-      await adminUser.save();
-      console.log("✅ Default admin user created:");
-      console.log("   Email: admin@quizflow.com");
-      console.log("   Password: admin123");
-    } else {
-      console.log("✅ Admin user already exists");
-    }
-  } catch (err) {
-    console.log("❌ Admin seeding failed:", err.message);
+    console.log("❌ DB Connection Failed...", err?.name || "Error");
   }
 }
 
@@ -56,6 +33,7 @@ app.get("/health", (req, res) => {
 app.use("/user", userRoutes);
 app.use("/batch", batchRoutes);
 app.use("/quiz", quizRoutes);
+app.use("/attempts", attemptRoutes);
 
 const PORT = process.env.PORT || 4400;
 app.listen(PORT, () => {

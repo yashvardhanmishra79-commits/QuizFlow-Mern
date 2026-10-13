@@ -1,7 +1,10 @@
 .manage-quizzes-section {
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    gap: clamp(24px, 3vw, 30px);
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0;
 }
 
 .manage-quizzes-header {
@@ -11,16 +14,19 @@
     background-color: white;
     box-shadow: var(--shadow-md);
     border-radius: var(--radius-lg);
-    padding: 20px 25px;
+    padding: clamp(12px, 2vw, 20px) clamp(20px, 3vw, 25px);
+    flex-wrap: wrap;
+    gap: clamp(12px, 2vw, 16px);
 }
 
 .manage-quizzes-header>div>h1 {
-    font-size: 28px;
+    font-size: clamp(24px, 4vw, 28px);
 }
 
 .manage-quizzes-header>div>p {
     color: var(--text-muted);
-    margin-top: 5px;
+    margin-top: 4px;
+    font-size: clamp(13px, 2vw, 15px);
 }
 
 .manage-quizzes-add-btn {
@@ -28,17 +34,19 @@
     align-items: center;
     gap: 8px;
     height: 44px;
-    padding: 0 22px;
+    padding: 0 clamp(12px, 2vw, 22px);
     border: none;
-    border-radius: var(--radius-sm);
+    border-radius: clamp(6px, 1vw, 8px);
     background-color: var(--primary);
     color: var(--text-white);
-    font-size: 16px;
+    font-size: clamp(14px, 1.5vw, 16px);
     font-weight: 600;
     cursor: pointer;
     text-decoration: none;
     box-shadow: var(--shadow-primary);
     transition: var(--transition);
+    white-space: nowrap;
+    min-height: 44px;
 }
 
 .manage-quizzes-add-btn:hover {
@@ -46,26 +54,28 @@
 }
 
 .manage-quizzes-add-btn>svg {
-    font-size: 20px;
+    font-size: clamp(16px, 2vw, 20px);
 }
 
 /* Quizzes List */
 .manage-quizzes-list {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: clamp(12px, 2vw, 14px);
+    max-width: 100%;
 }
 
 .quiz-list-card {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
     background-color: white;
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
-    padding: 16px 20px;
+    padding: clamp(12px, 2vw, 16px);
     transition: var(--transition);
+    min-height: 64px;
 }
 
 .quiz-list-card:hover {
@@ -74,41 +84,110 @@
 }
 
 .quiz-list-icon {
-    width: 42px;
-    height: 42px;
+    width: clamp(32px, 8vw, 42px);
+    height: clamp(32px, 8vw, 42px);
     border-radius: var(--radius-md);
     background-color: var(--primary-light);
     color: var(--primary);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 22px;
+    font-size: clamp(18px, 3vw, 22px);
     flex-shrink: 0;
 }
 
 .quiz-list-name {
     flex: 1;
-    font-size: 16px;
+    min-width: 0;
+    font-size: clamp(14px, 2vw, 16px);
     font-weight: 600;
     color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .quiz-list-delete-btn {
-    width: 34px;
-    height: 34px;
+    width: clamp(28px, 6vw, 34px);
+    height: clamp(28px, 6vw, 34px);
     border: none;
-    border-radius: var(--radius-sm);
+    border-radius: clamp(6px, 1vw, 8px);
     background-color: var(--error-light);
     color: var(--error);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    font-size: clamp(14px, 2vw, 18px);
     cursor: pointer;
     transition: var(--transition);
+    margin-left: auto;
 }
 
 .quiz-list-delete-btn:hover {
     background-color: var(--error);
     color: var(--text-white);
+}
+
+@media (max-width: 1023px) {
+    .manage-quizzes-header>div>h1 {
+        font-size: clamp(1.5rem, 4vw, 1.75rem);
+        overflow-wrap: anywhere;
+    }
+
+    .manage-quizzes-header>div>p {
+        overflow-wrap: anywhere;
+    }
+}
+
+@media (max-width: 768px) {
+    .manage-quizzes-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .manage-quizzes-header>div>p {
+        width: 100%;
+        font-size: 14px;
+    }
+
+    .manage-quizzes-add-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .manage-quizzes-list {
+        gap: 12px;
+    }
+
+    .quiz-list-card {
+        min-width: 0;
+        flex-wrap: wrap;
+    }
+
+    .quiz-list-name {
+        white-space: normal;
+        overflow: visible;
+        overflow-wrap: anywhere;
+        text-overflow: clip;
+    }
+
+    .quiz-list-delete-btn {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+        flex-shrink: 0;
+    }
+
+    .manage-quizzes-add-btn {
+        min-height: 44px;
+    }
+}
+
+@media (max-width: 480px) {
+    .manage-quizzes-add-btn {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
 }

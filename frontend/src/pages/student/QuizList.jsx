@@ -17,18 +17,21 @@ function QuizList() {
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [attemptsError, setAttemptsError] = useState("");
 
   // ============================================
   // LOAD QUIZZES
   // ============================================
   useEffect(() => {
+    const controller = new AbortController();
+
     const storedUserData = localStorage.getItem("userData");
 
     // CHECK LOGIN
     if (!storedUserData) {
       alert("Please login to access quizzes");
       navigate("/login");
-      return;
+      return () => controller.abort();
     }
 
     let userData;
@@ -41,13 +44,15 @@ function QuizList() {
 
       localStorage.removeItem("userData");
       navigate("/login");
-      return;
+      return () => controller.abort();
     }
 
-    console.log("=================================");
-    console.log("USER DATA:", userData);
-    console.log("USER BATCH:", userData.batch);
-    console.log("=================================");
+    if (!localStorage.getItem("authToken")) {
+      setError("Your session has expired. Please sign in again.");
+      setLoading(false);
+      navigate("/login");
+      return () => controller.abort();
+    }
 
     // CHECK BATCH
     if (!userData.batch) {
@@ -58,7 +63,7 @@ function QuizList() {
       );
 
       setLoading(false);
-      return;
+      return () => controller.abort();
     }
 
     // GET BATCH ID
@@ -67,61 +72,104 @@ function QuizList() {
         ? userData.batch?._id
         : userData.batch;
 
-    console.log("BATCH ID USED FOR API:", batchId);
-
     // VALIDATE BATCH ID
     if (!batchId) {
       console.error("Invalid batch:", userData.batch);
 
       setError("Invalid batch assigned to your account.");
       setLoading(false);
-      return;
+      return () => controller.abort();
     }
 
-    // FETCH QUIZZES
-    const getData = async () => {
+    async function getData() {
       try {
-        console.log("GET:", `/quiz/${batchId}`);
+        const [quizzesResult, attemptsResult] = await Promise.allSettled([
+          api.get(`/quiz/${batchId}`, { signal: controller.signal }),
+          api.get("/attempts/mine", { signal: controller.signal }),
+        ]);
 
-        const response = await api.get(`/quiz/${batchId}`);
+        if (controller.signal.aborted) {
+          return;
+        }
 
-        console.log("QUIZ RESPONSE:", response.data);
+        if (quizzesResult.status === "rejected") {
+          throw quizzesResult.reason;
+        }
 
-        if (response.data?.success) {
-          const quizData = response.data?.data || [];
-
-          console.log("QUIZZES FROM DATABASE:", quizData);
-
-          setQuizzes(quizData);
-          setError("");
-        } else {
-          setQuizzes([]);
-
-          setError(
-            response.data?.message || "Error in getting quizzes."
+        const quizzesResponse = quizzesResult.value.data;
+        if (
+          quizzesResponse?.success !== true ||
+          !Array.isArray(quizzesResponse.data)
+        ) {
+          throw new Error(
+            quizzesResponse?.message || "Error in getting quizzes."
           );
         }
-      } catch (err) {
-        console.error("QUIZ API ERROR:", err);
 
-        console.error(
-          "SERVER RESPONSE:",
-          err.response?.data
+        let latestAttempts = new Map();
+        let attemptsAvailable = false;
+        if (attemptsResult.status === "fulfilled") {
+          const attemptsResponse = attemptsResult.value.data;
+          if (
+            attemptsResponse?.success === true &&
+            Array.isArray(attemptsResponse.data)
+          ) {
+            attemptsAvailable = true;
+            attemptsResponse.data.forEach((attempt) => {
+              const attemptQuizId = String(attempt.quiz?._id || attempt.quiz);
+              if (attemptQuizId && !latestAttempts.has(attemptQuizId)) {
+                latestAttempts.set(attemptQuizId, attempt);
+              }
+            });
+          } else {
+            setAttemptsError(
+              attemptsResponse?.message ||
+                "Unable to load your quiz attempts."
+            );
+          }
+        } else {
+          if (!controller.signal.aborted) {
+            console.error("Unable to load student attempts:", attemptsResult.reason);
+          }
+          setAttemptsError(
+            attemptsResult.reason?.response?.data?.message ||
+              "Unable to load your quiz attempts."
+          );
+        }
+
+        setQuizzes(
+          quizzesResponse.data.map((quiz) => {
+            const attempt = latestAttempts.get(String(quiz._id));
+            return {
+              ...quiz,
+              attempted: Boolean(attempt),
+              marksObtained: attempt?.obtainedMarks,
+              attemptStatusUnavailable: !attemptsAvailable,
+            };
+          })
         );
-
+        setError("");
+      } catch (err) {
+        if (controller.signal.aborted) {
+          return;
+        }
+        console.error("Quiz API error:", err);
         setQuizzes([]);
-
         setError(
           err.response?.data?.message ||
-            err.response?.data?.error ||
+            err.message ||
             "Unable to load quizzes from the server."
         );
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
       }
-    };
+    }
 
     getData();
+
+    return () => controller.abort();
   }, [navigate]);
 
   // ============================================
@@ -167,11 +215,11 @@ function QuizList() {
     }
 
     if (filter === "attempted") {
-      return quiz.attempted === true;
+      return !quiz.attemptStatusUnavailable && quiz.attempted === true;
     }
 
     if (filter === "not-attempted") {
-      return quiz.attempted !== true;
+      return !quiz.attemptStatusUnavailable && quiz.attempted !== true;
     }
 
     return true;
@@ -255,7 +303,7 @@ function QuizList() {
       )}
 
       {/* QUIZ GRID */}
-      {!error && (
+      {!error && !(attemptsError && filter !== "all") && (
         <div className="quiz-grid">
 
           {filtered.map((quiz) => {
@@ -311,7 +359,9 @@ function QuizList() {
 
                   <div className="status-badge">
 
-                    {quiz.attempted ? (
+                    {quiz.attemptStatusUnavailable ? (
+                      <span>Attempt status unavailable</span>
+                    ) : quiz.attempted ? (
                       <>
                         <MdCheckCircle
                           className="status-icon success"
@@ -338,7 +388,7 @@ function QuizList() {
                   {/* MARKS */}
                   <div className="marks-display">
 
-                    {quiz.attempted ? (
+                    {quiz.attempted && !quiz.attemptStatusUnavailable ? (
                       <>
                         <span className="marks-obtained">
                           {quiz.marksObtained ?? 0}
@@ -397,7 +447,18 @@ function QuizList() {
 
       {/* NO QUIZZES */}
       {!error &&
-        filtered.length === 0 && (
+      attemptsError &&
+      filter !== "all" && (
+        <div className="empty-state">
+          <MdQuiz className="empty-icon" />
+          <h3>Unable to load quiz attempts</h3>
+          <p>{attemptsError}</p>
+        </div>
+      )}
+
+      {!error &&
+      !attemptsError &&
+      filtered.length === 0 && (
           <div className="empty-state">
 
             <MdQuiz className="empty-icon" />

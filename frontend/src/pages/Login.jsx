@@ -30,7 +30,7 @@ function Login() {
       const response = await api.post("/user/login", data);
       if (response.data?.success) {
         const userData = response.data?.data;
-        login(userData);
+        login(userData, response.data?.authToken);
         
         // Redirect based on role
         if (userData.role === "admin") {

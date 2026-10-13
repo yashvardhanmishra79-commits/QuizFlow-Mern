@@ -1,7 +1,10 @@
 .manage-batches-section {
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    gap: clamp(24px, 3vw, 30px);
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0;
 }
 
 .manage-batches-header {
@@ -11,16 +14,19 @@
     background-color: white;
     box-shadow: var(--shadow-md);
     border-radius: var(--radius-lg);
-    padding: 20px 25px;
+    padding: clamp(12px, 2vw, 20px) clamp(20px, 3vw, 25px);
+    flex-wrap: wrap;
+    gap: clamp(12px, 2vw, 16px);
 }
 
 .manage-batches-header>div>h1 {
-    font-size: 28px;
+    font-size: clamp(24px, 4vw, 28px);
 }
 
 .manage-batches-header>div>p {
     color: var(--text-muted);
-    margin-top: 5px;
+    margin-top: 4px;
+    font-size: clamp(13px, 2vw, 15px);
 }
 
 .manage-batches-add-btn {
@@ -28,16 +34,18 @@
     align-items: center;
     gap: 8px;
     height: 44px;
-    padding: 0 22px;
+    padding: 0 clamp(12px, 2vw, 22px);
     border: none;
-    border-radius: var(--radius-sm);
+    border-radius: clamp(6px, 1vw, 8px);
     background-color: var(--primary);
     color: var(--text-white);
-    font-size: 16px;
+    font-size: clamp(14px, 1.5vw, 16px);
     font-weight: 600;
     cursor: pointer;
     box-shadow: var(--shadow-primary);
     transition: var(--transition);
+    white-space: nowrap;
+    min-height: 44px;
 }
 
 .manage-batches-add-btn:hover {
@@ -45,14 +53,14 @@
 }
 
 .manage-batches-add-btn>svg {
-    font-size: 20px;
+    font-size: clamp(16px, 2vw, 20px);
 }
 
 /* Batches Grid */
 .manage-batches-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(clamp(200px, 100%, 260px), 1fr));
+    gap: clamp(12px, 2vw, 20px);
 }
 
 .batch-card {
@@ -61,12 +69,13 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
-    padding: 30px 20px;
+    padding: clamp(20px, 3vw, 30px) clamp(16px, 2vw, 20px);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 15px;
+    gap: clamp(10px, 1.5vw, 15px);
     transition: var(--transition);
+    text-align: center;
 }
 
 .batch-card:hover {
@@ -76,8 +85,8 @@
 }
 
 .batch-card-icon {
-    width: 60px;
-    height: 60px;
+    width: clamp(48px, 10vw, 60px);
+    height: clamp(48px, 10vw, 60px);
     border-radius: var(--radius-full);
     background-color: var(--primary-light);
     display: flex;
@@ -86,30 +95,31 @@
 }
 
 .batch-card-initial {
-    font-size: 24px;
+    font-size: clamp(20px, 4vw, 24px);
     font-weight: 700;
     color: var(--primary);
 }
 
 .batch-card>h3 {
-    font-size: 18px;
+    font-size: clamp(16px, 2vw, 18px);
     color: var(--text-primary);
+    overflow-wrap: anywhere;
 }
 
 .batch-delete-btn {
     position: absolute;
-    top: 14px;
-    right: 14px;
-    width: 32px;
-    height: 32px;
+    top: clamp(10px, 1.5vw, 14px);
+    right: clamp(10px, 1.5vw, 14px);
+    width: clamp(28px, 5vw, 32px);
+    height: clamp(28px, 5vw, 32px);
     border: none;
-    border-radius: var(--radius-sm);
+    border-radius: clamp(6px, 1vw, 8px);
     background-color: var(--error-light);
     color: var(--error);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 17px;
+    font-size: clamp(14px, 2vw, 17px);
     cursor: pointer;
     transition: var(--transition);
 }
@@ -128,7 +138,8 @@
     align-items: center;
     justify-content: center;
     z-index: 100;
-    padding: 20px;
+    padding: clamp(12px, 2vw, 20px);
+    box-sizing: border-box;
 }
 
 .modal-card {
@@ -136,8 +147,11 @@
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-xl);
     width: 100%;
-    max-width: 460px;
-    padding: 25px;
+    max-width: min(92vw, 460px);
+    max-height: 90dvh;
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: clamp(20px, 3vw, 25px);
     animation: modal-pop 0.2s ease;
 }
 
@@ -161,14 +175,19 @@
 }
 
 .modal-header>h2 {
-    font-size: 22px;
+    font-size: clamp(18px, 3vw, 22px);
 }
 
 .modal-close-icon {
-    font-size: 24px;
+    font-size: clamp(20px, 3vw, 24px);
     color: var(--text-muted);
     cursor: pointer;
     transition: var(--transition);
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .modal-close-icon:hover {
@@ -178,8 +197,8 @@
 .modal-body {
     display: flex;
     flex-direction: column;
-    gap: 18px;
-    padding: 22px 0;
+    gap: clamp(14px, 2vw, 18px);
+    padding: clamp(18px, 2vw, 22px) 0;
 }
 
 .modal-form-group {
@@ -189,16 +208,18 @@
 }
 
 .modal-form-group>label {
-    font-size: 15px;
+    font-size: clamp(13px, 1.5vw, 15px);
     font-weight: 600;
     color: var(--text-secondary);
 }
 
 .modal-form-group>input {
-    height: 42px;
+    width: 100%;
+    min-height: 44px;
+    box-sizing: border-box;
     padding: 0 12px;
     border: 1.5px solid var(--border-dark);
-    border-radius: var(--radius-sm);
+    border-radius: clamp(6px, 1vw, 8px);
     font-size: 15px;
     font-family: var(--font-family);
     background-color: var(--bg);
@@ -218,17 +239,20 @@
     gap: 12px;
     padding-top: 15px;
     border-top: 1px solid var(--border);
+    flex-wrap: wrap;
 }
 
 .modal-cancel-btn,
 .modal-submit-btn {
-    height: 42px;
-    padding: 0 24px;
-    border-radius: var(--radius-sm);
-    font-size: 15px;
+    height: 44px;
+    padding: 0 clamp(16px, 2vw, 24px);
+    border-radius: clamp(6px, 1vw, 8px);
+    font-size: clamp(13px, 1.5vw, 15px);
     font-weight: 600;
     cursor: pointer;
     transition: var(--transition);
+    min-width: 100px;
+    min-height: 44px;
 }
 
 .modal-cancel-btn {
@@ -250,4 +274,81 @@
 
 .modal-submit-btn:hover {
     background-color: var(--primary-hover);
+}
+
+@media (max-width: 1023px) {
+    .manage-batches-header>div>h1 {
+        font-size: clamp(1.5rem, 4vw, 1.75rem);
+    }
+
+    .manage-batches-header>div>p {
+        overflow-wrap: anywhere;
+    }
+}
+
+@media (max-width: 768px) {
+    .manage-batches-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .manage-batches-header>div>p {
+        width: 100%;
+    }
+
+    .manage-batches-add-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .manage-batches-grid {
+        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    }
+
+    .batch-card {
+        padding: 16px;
+    }
+
+    .batch-delete-btn {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .modal-form-group>input {
+        font-size: 16px;
+    }
+
+    .manage-batches-header>div>h1 {
+        font-size: clamp(1.5rem, 5vw, 1.75rem);
+    }
+
+    .manage-batches-header>div>p,
+    .modal-form-group>label {
+        font-size: 14px;
+        overflow-wrap: anywhere;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-footer {
+        flex-direction: column;
+    }
+
+    .modal-cancel-btn,
+    .modal-submit-btn {
+        width: 100%;
+    }
+}
+
+@media (max-height: 500px) {
+    .modal-overlay {
+        align-items: flex-start;
+        overflow-y: auto;
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
 }

@@ -1,7 +1,9 @@
 .admin-layout {
     display: grid;
-    grid-template-columns: 260px 1fr;
+    grid-template-columns: clamp(220px, 20vw, 260px) 1fr;
     min-height: 100vh;
+    max-width: 1600px;
+    margin: 0 auto;
 }
 
 .admin-sidebar {
@@ -191,4 +193,123 @@
     height: 100%;
     max-width: 1300px;
     margin: auto;
+}
+
+/* Mobile Sidebar Overlay */
+.admin-sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background-color: var(--overlay);
+    z-index: 100;
+}
+
+.admin-sidebar-mobile {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    background-color: white;
+    z-index: 101;
+    box-shadow: var(--shadow-xl);
+}
+
+.admin-sidebar-mobile.open {
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-sidebar-mobile .admin-sidebar-top {
+    padding: 24px 16px;
+}
+
+.admin-sidebar-mobile .admin-sidebar-nav-row {
+    padding: 14px 12px;
+}
+
+.admin-sidebar-mobile .admin-sidebar-end {
+    padding: 20px 12px 0;
+}
+
+.admin-sidebar-mobile .admin-profile-card {
+    padding: 12px;
+}
+
+.admin-sidebar-mobile .admin-profile-card>img {
+    width: 42px;
+    height: 42px;
+}
+
+.admin-sidebar-mobile .admin-logout-btn {
+    padding: 14px 12px;
+    width: 100%;
+}
+
+.admin-mobile-toggle {
+    display: none;
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 24px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .admin-content {
+        padding: clamp(20px, 3vw, 32px);
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-sidebar {
+        display: none;
+    }
+
+    .admin-sidebar-overlay {
+        display: block;
+    }
+
+    .admin-sidebar-mobile {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .admin-content {
+        padding: clamp(12px, 2vw, 20px);
+    }
+
+    .admin-mobile-toggle {
+        display: flex;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-content {
+        padding: 12px;
+    }
+
+    .admin-sidebar-mobile {
+        width: 100%;
+    }
+
+    .admin-sidebar-nav-row {
+        font-size: 14px;
+        padding: 12px 16px;
+    }
+
+    .admin-sidebar-nav-row > .nav-icon {
+        font-size: 18px;
+    }
 }

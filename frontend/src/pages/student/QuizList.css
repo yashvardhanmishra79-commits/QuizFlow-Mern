@@ -1,18 +1,21 @@
 .quiz-list-page {
-  padding: 24px 0;
+  padding: clamp(16px, 3vw, 24px) 0;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  gap: 24px;
-  margin-bottom: 32px;
+  gap: clamp(12px, 2vw, 24px);
+  margin-bottom: clamp(20px, 3vw, 32px);
   flex-wrap: wrap;
+  padding: 0 clamp(12px, 2vw, 20px);
 }
 
 .header-content h1 {
-  font-size: 28px;
+  font-size: clamp(24px, 4vw, 28px);
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 4px;
@@ -20,7 +23,7 @@
 
 .header-content p {
   color: var(--text-muted);
-  font-size: 15px;
+  font-size: clamp(13px, 2vw, 15px);
 }
 
 .filter-tabs {
@@ -29,18 +32,24 @@
   background-color: var(--border-light);
   padding: 4px;
   border-radius: var(--radius-full);
+  flex-wrap: wrap;
+  overflow-wrap: break-word;
 }
 
 .filter-tabs button {
-  padding: 8px 20px;
+  padding: clamp(6px, 1vw, 8px) clamp(12px, 2vw, 20px);
   border: none;
   background: transparent;
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: clamp(12px, 1.5vw, 14px);
   font-weight: 500;
   border-radius: var(--radius-full);
   cursor: pointer;
   transition: var(--transition);
+  white-space: nowrap;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
 }
 
 .filter-tabs button:hover {
@@ -55,19 +64,21 @@
 
 .quiz-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(clamp(240px, 100%, 340px), 1fr));
+  gap: clamp(16px, 2vw, 24px);
+  padding: 0 clamp(12px, 2vw, 20px);
 }
 
 .quiz-card {
   background-color: var(--text-white);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 24px;
+  padding: clamp(16px, 2vw, 24px);
   box-shadow: var(--shadow-sm);
   transition: var(--transition);
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .quiz-card:hover {
@@ -79,26 +90,28 @@
 .quiz-card-header {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: clamp(12px, 2vw, 16px);
+  margin-bottom: clamp(12px, 2vw, 16px);
 }
 
 .quiz-icon {
-  width: 48px;
-  height: 48px;
+  width: clamp(40px, 10vw, 48px);
+  height: clamp(40px, 10vw, 48px);
   border-radius: var(--radius-md);
   background-color: var(--primary-light);
   color: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: clamp(18px, 3vw, 22px);
+  flex-shrink: 0;
 }
 
 .quiz-meta {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
 
 .quiz-subject {
@@ -107,28 +120,33 @@
   color: var(--primary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  overflow-wrap: break-word;
 }
 
 .quiz-details {
-  font-size: 13px;
+  font-size: clamp(12px, 1.5vw, 13px);
   color: var(--text-muted);
+  overflow-wrap: break-word;
 }
 
 .quiz-title {
-  font-size: 18px;
+  font-size: clamp(16px, 2vw, 18px);
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: 20px;
+  margin-bottom: clamp(16px, 2vw, 20px);
   line-height: 1.4;
+  overflow-wrap: break-word;
 }
 
 .quiz-status-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-top: 16px;
+  margin-bottom: clamp(16px, 2vw, 20px);
+  padding-top: clamp(12px, 2vw, 16px);
   border-top: 1px solid var(--border-light);
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .status-badge {
@@ -137,12 +155,15 @@
   gap: 8px;
   padding: 6px 12px;
   border-radius: var(--radius-full);
-  font-size: 13px;
+  font-size: clamp(12px, 1.5vw, 13px);
   font-weight: 500;
+  white-space: nowrap;
+  min-height: 32px;
 }
 
 .status-badge .status-icon {
-  font-size: 16px;
+  font-size: clamp(14px, 2vw, 16px);
+  flex-shrink: 0;
 }
 
 .status-badge.success {
@@ -159,8 +180,9 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 16px;
+  font-size: clamp(14px, 2vw, 16px);
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .marks-obtained {
@@ -177,7 +199,7 @@
 
 .na-text {
   color: var(--text-light);
-  font-size: 14px;
+  font-size: clamp(12px, 1.5vw, 14px);
   font-weight: 500;
 }
 
@@ -187,15 +209,16 @@
   justify-content: center;
   gap: 10px;
   width: 100%;
-  padding: 14px;
+  padding: clamp(10px, 2vw, 14px);
   border: none;
   border-radius: var(--radius-md);
-  font-size: 15px;
+  font-size: clamp(13px, 1.5vw, 15px);
   font-weight: 600;
   cursor: pointer;
   transition: var(--transition);
   background-color: var(--primary);
   color: var(--text-white);
+  min-height: 44px;
 }
 
 .start-quiz-btn:hover {
@@ -218,7 +241,7 @@
 
 .start-quiz-btn .md-play-arrow,
 .start-quiz-btn .md-refresh {
-  font-size: 18px;
+  font-size: clamp(16px, 2vw, 18px);
 }
 
 .empty-state {
@@ -226,19 +249,19 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 24px;
+  padding: clamp(40px, 8vw, 80px) clamp(16px, 2vw, 24px);
   text-align: center;
   grid-column: 1 / -1;
 }
 
 .empty-icon {
-  font-size: 64px;
+  font-size: clamp(48px, 10vw, 64px);
   color: var(--border-dark);
-  margin-bottom: 16px;
+  margin-bottom: clamp(12px, 2vw, 16px);
 }
 
 .empty-state h3 {
-  font-size: 20px;
+  font-size: clamp(18px, 3vw, 20px);
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 8px;
@@ -246,20 +269,47 @@
 
 .empty-state p {
   color: var(--text-muted);
-  font-size: 15px;
+  font-size: clamp(13px, 2vw, 15px);
 }
 
 @media (max-width: 768px) {
   .page-header {
     flex-direction: column;
     align-items: stretch;
+    gap: 12px;
   }
 
   .filter-tabs {
-    justify-content: center;
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .quiz-grid {
     grid-template-columns: 1fr;
+  }
+
+  .quiz-card {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .quiz-list-page {
+    padding: 12px 0;
+  }
+
+  .page-header {
+    padding: 0 12px;
+    margin-bottom: 16px;
+  }
+
+  .quiz-grid {
+    padding: 0 12px;
+    gap: 12px;
+  }
+
+  .filter-tabs button {
+    padding: 6px 10px;
   }
 }

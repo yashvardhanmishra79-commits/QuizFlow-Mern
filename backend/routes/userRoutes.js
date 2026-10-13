@@ -1,5 +1,19 @@
 import express from "express";
 import User from "../models/User.js";
+import {
+  createSession,
+  requireAdmin,
+  revokeSession,
+} from "../middleware/auth.js";
+import {
+  hashLegacyPassword,
+  hashPassword,
+  isArgon2EncodedValue,
+  isArgon2idHash,
+  PasswordPolicyError,
+  verifyLegacyPassword,
+  verifyPassword,
+} from "../utils/passwordSecurity.js";
 
 const router = express.Router();
 
@@ -7,11 +21,16 @@ const router = express.Router();
 // ADD USER
 // =========================
 
-router.post("/add-user", async (req, res) => {
+router.post("/add-user", requireAdmin, async (req, res) => {
   try {
-    const data = req.body;
-
-    const newUser = new User(data);
+    const { name, email, password, batch } = req.body;
+    const newUser = new User({
+      name,
+      email,
+      passwordHash: await hashPassword(password),
+      batch,
+      role: "student",
+    });
 
     const newUserData = await newUser.save();
 
@@ -21,12 +40,17 @@ router.post("/add-user", async (req, res) => {
       data: newUserData,
     });
   } catch (error) {
-    console.error("Add user error:", error);
+    if (error instanceof PasswordPolicyError) {
+      return res.status(400).send({
+        success: false,
+        message: error.message,
+      });
+    }
+    console.error("Add user error:", error?.name || "Error");
 
     res.status(500).send({
       success: false,
       message: "Error Adding User",
-      error: error.message,
     });
   }
 });
@@ -39,8 +63,16 @@ router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const userData = await User.findOne({ email: email });
+    if (typeof email !== "string" || typeof password !== "string") {
+      return res.send({
+        success: false,
+        message: "Email Or Password Is Invalid",
+      });
+    }
 
+    let userData = await User.findOne({ email }).select(
+      "+password +passwordHash +sessionVersion"
+    );
     if (!userData) {
       return res.send({
         success: false,
@@ -48,27 +80,115 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    const isPasswordMatch = password == userData.password;
+    let passwordMatches = false;
+    const storedPasswordHash = userData.passwordHash;
+    if (isArgon2idHash(storedPasswordHash)) {
+      passwordMatches = await verifyPassword(password, storedPasswordHash);
+    } else if (typeof userData.password === "string") {
+      const legacyPassword = userData.password;
+      let replacementHash;
 
-    if (!isPasswordMatch) {
+      if (isArgon2idHash(legacyPassword)) {
+        passwordMatches = await verifyPassword(password, legacyPassword);
+        if (passwordMatches) {
+          replacementHash = legacyPassword;
+        }
+      } else if (
+        !isArgon2EncodedValue(legacyPassword) &&
+        verifyLegacyPassword(password, legacyPassword)
+      ) {
+        replacementHash = await hashLegacyPassword(legacyPassword);
+        passwordMatches = true;
+      }
+
+      if (passwordMatches && replacementHash) {
+        const hashCondition =
+          storedPasswordHash === undefined
+            ? { passwordHash: { $exists: false } }
+            : { passwordHash: storedPasswordHash };
+        const upgrade = await User.updateOne(
+          {
+            _id: userData._id,
+            password: legacyPassword,
+            ...hashCondition,
+          },
+          {
+            $set: { passwordHash: replacementHash },
+            $unset: { password: 1 },
+          }
+        );
+
+        passwordMatches = upgrade.modifiedCount === 1;
+        if (!passwordMatches) {
+          userData = await User.findById(userData._id).select(
+            "+password +passwordHash +sessionVersion"
+          );
+          if (isArgon2idHash(userData?.passwordHash)) {
+            passwordMatches = await verifyPassword(
+              password,
+              userData.passwordHash
+            );
+          } else if (
+            userData?.passwordHash === undefined &&
+            isArgon2idHash(userData?.password)
+          ) {
+            passwordMatches = await verifyPassword(
+              password,
+              userData.password
+            );
+          }
+        }
+      }
+    }
+
+    if (!passwordMatches) {
       return res.send({
         success: false,
         message: "Email Or Password Is Invalid",
       });
     }
 
+    const authToken = await createSession(
+      userData._id,
+      userData.sessionVersion ?? 0
+    );
+    const safeUserData = userData.toObject();
+    delete safeUserData.password;
+    delete safeUserData.passwordHash;
+
     res.send({
       success: true,
       message: "Login Successfully",
-      data: userData,
+      data: safeUserData,
+      authToken,
     });
   } catch (error) {
-    console.error("Login error:", error);
+    console.error("Login error:", error?.name || "Error");
 
     res.status(500).send({
       success: false,
       message: "Login Error",
-      error: error.message,
+    });
+  }
+});
+
+router.post("/logout", async (req, res) => {
+  try {
+    const authorization = req.get("authorization") || "";
+    const [scheme, token] = authorization.split(" ");
+    if (scheme === "Bearer" && token) {
+      await revokeSession(token);
+    }
+
+    return res.send({
+      success: true,
+      message: "Logged out successfully.",
+    });
+  } catch (error) {
+    console.error("Logout error:", error?.name || "Error");
+    return res.status(500).send({
+      success: false,
+      message: "Unable to end the server session.",
     });
   }
 });
@@ -77,11 +197,11 @@ router.post("/login", async (req, res) => {
 // GET ALL STUDENTS
 // =========================
 
-router.get("/get-all-students", async (req, res) => {
+router.get("/get-all-students", requireAdmin, async (req, res) => {
   try {
-    const allStudents = await User.find({
-      role: "student",
-    });
+    const allStudents = await User.find({ role: "student" }).select(
+      "-password"
+    );
 
     res.send({
       success: true,
@@ -103,7 +223,7 @@ router.get("/get-all-students", async (req, res) => {
 // DELETE USER
 // =========================
 
-router.post("/delete-user", async (req, res) => {
+router.post("/delete-user", requireAdmin, async (req, res) => {
   try {
     const { userId } = req.body;
 
@@ -114,7 +234,10 @@ router.post("/delete-user", async (req, res) => {
       });
     }
 
-    const deletedUser = await User.findByIdAndDelete(userId);
+    const deletedUser = await User.findOneAndDelete({
+      _id: userId,
+      role: "student",
+    });
 
     if (!deletedUser) {
       return res.send({
@@ -143,7 +266,7 @@ router.post("/delete-user", async (req, res) => {
 // UPDATE USER
 // =========================
 
-router.post("/update-user", async (req, res) => {
+router.post("/update-user", requireAdmin, async (req, res) => {
   try {
     const {
       userId,
@@ -166,14 +289,27 @@ router.post("/update-user", async (req, res) => {
       batch,
     };
 
-    // Only update password if a new password was provided
-    if (password && password.trim() !== "") {
-      updateData.password = password;
+    if (password !== undefined && password !== "") {
+      if (typeof password !== "string") {
+        return res.status(400).send({
+          success: false,
+          message: "Password must be a string.",
+        });
+      }
+      if (password.trim() !== "") {
+        updateData.passwordHash = await hashPassword(password);
+      }
     }
 
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      updateData,
+    const update = { $set: updateData };
+    if (updateData.passwordHash) {
+      update.$unset = { password: 1 };
+      update.$inc = { sessionVersion: 1 };
+    }
+
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: userId, role: "student" },
+      update,
       {
         new: true,
       }
@@ -192,12 +328,17 @@ router.post("/update-user", async (req, res) => {
       data: updatedUser,
     });
   } catch (error) {
-    console.error("Update user error:", error);
+    if (error instanceof PasswordPolicyError) {
+      return res.status(400).send({
+        success: false,
+        message: error.message,
+      });
+    }
+    console.error("Update user error:", error?.name || "Error");
 
     res.status(500).send({
       success: false,
       message: "Error Updating Student",
-      error: error.message,
     });
   }
 });

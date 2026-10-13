@@ -93,10 +93,39 @@ body {
 }
 
 main {
-   padding: 40px;
+   padding: clamp(20px, 4vw, 40px);
 }
 
 main>* {
    max-width: 1300px;
    margin: auto;
+}
+
+/* Prevent horizontal overflow from breaking layout */
+body {
+   overflow-x: hidden;
+}
+
+/* Responsive container utility */
+.container {
+   max-width: 1200px;
+   margin: 0 auto;
+   padding: 0 clamp(16px, 3vw, 24px);
+}
+
+/* Responsive typography */
+h1 {
+   font-size: clamp(28px, 4vw, 40px);
+}
+
+h2 {
+   font-size: clamp(20px, 3vw, 28px);
+}
+
+h3 {
+   font-size: clamp(16px, 2.5vw, 20px);
+}
+
+p {
+   font-size: clamp(14px, 1.1vw, 18px);
 }

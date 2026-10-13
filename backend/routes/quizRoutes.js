@@ -1,10 +1,11 @@
 import express from "express";
 import Quiz from "../models/Quiz.js";
 import { generateQuizWithAI } from "../services/geminiService.js";
+import { requireAdmin } from "../middleware/auth.js";
 
 const router = express.Router();
 
-router.post("/generate-ai-quiz", async (req, res) => {
+router.post("/generate-ai-quiz", requireAdmin, async (req, res) => {
   try {
     const {
       topic,
@@ -46,7 +47,7 @@ router.post("/generate-ai-quiz", async (req, res) => {
   }
 });
 
-router.post("/add-quiz", async (req, res) => {
+router.post("/add-quiz", requireAdmin, async (req, res) => {
   const data = req.body;
   const newQuiz = new Quiz(data);
   const newQuizData = await newQuiz.save();
@@ -57,26 +58,32 @@ router.post("/add-quiz", async (req, res) => {
   });
 });
 
-router.post("/delete-quiz", async (req, res) => {
+router.post("/delete-quiz", requireAdmin, async (req, res) => {
   const { quizId } = req.body;
   await Quiz.findByIdAndDelete(quizId);
   res.send({ success: true, message: "Quiz Deleted Successfully" });
 });
 
 router.get("/get-all", async (req, res) => {
-  const quizzes = await Quiz.find();
+  const quizzes = await Quiz.find().select(
+    "-questions.correctOption -questions.explanation"
+  );
   res.send({ success: true, message: "Success", data: quizzes });
 });
 
 router.get("/:batchId", async (req, res) => {
   const batchId = req.params.batchId;
-  const quizzes = await Quiz.find({ batch: batchId });
+  const quizzes = await Quiz.find({ batch: batchId }).select(
+    "-questions.correctOption -questions.explanation"
+  );
   res.send({ success: true, message: "Success", data: quizzes });
 });
 
 router.get("/single/:quizId", async (req, res) => {
   const quizId = req.params.quizId;
-  const quizData = await Quiz.findById(quizId);
+  const quizData = await Quiz.findById(quizId).select(
+    "-questions.correctOption -questions.explanation"
+  );
   res.send({ success: true, message: "Success", data: quizData });
 });
 

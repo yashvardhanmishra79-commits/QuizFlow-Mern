@@ -13,17 +13,19 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
-    padding: 24px 28px;
+    padding: clamp(20px, 3vw, 28px);
+    gap: 16px;
+    flex-wrap: wrap;
 }
 
 .dashboard-welcome>div>h1 {
-    font-size: 26px;
+    font-size: clamp(20px, 3vw, 26px);
     font-weight: 700;
 }
 
 .dashboard-welcome>div>p {
     color: var(--text-muted);
-    font-size: 15px;
+    font-size: clamp(13px, 1.5vw, 15px);
     margin-top: 5px;
 }
 
@@ -41,6 +43,7 @@
     text-decoration: none;
     box-shadow: var(--shadow-primary);
     transition: var(--transition);
+    white-space: nowrap;
 }
 
 .dashboard-cta-btn:hover {
@@ -55,8 +58,8 @@
 /* ===================== Stats ===================== */
 .dashboard-stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: clamp(12px, 2vw, 20px);
 }
 
 .dashboard-stat-card {
@@ -67,8 +70,9 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
-    padding: 22px;
+    padding: clamp(16px, 2.5vw, 22px);
     transition: var(--transition);
+    min-width: 0;
 }
 
 .dashboard-stat-card:hover {
@@ -77,13 +81,13 @@
 }
 
 .dashboard-stat-icon {
-    width: 54px;
-    height: 54px;
+    width: clamp(44px, 6vw, 54px);
+    height: clamp(44px, 6vw, 54px);
     border-radius: var(--radius-md);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 26px;
+    font-size: clamp(20px, 3vw, 26px);
     flex-shrink: 0;
 }
 
@@ -111,21 +115,22 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
+    min-width: 0;
 }
 
 .dashboard-stat-value {
-    font-size: 26px;
+    font-size: clamp(20px, 3vw, 26px);
     font-weight: 700;
     color: var(--text-primary);
 }
 
 .dashboard-stat-title {
-    font-size: 14px;
+    font-size: clamp(12px, 1.5vw, 14px);
     color: var(--text-muted);
 }
 
 .dashboard-stat-trend {
-    font-size: 12px;
+    font-size: clamp(11px, 1.2vw, 12px);
     color: var(--success);
     font-weight: 600;
 }
@@ -136,23 +141,25 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 16px;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
 .dashboard-section-header>h2 {
-    font-size: 20px;
+    font-size: clamp(18px, 2.5vw, 20px);
     font-weight: 700;
 }
 
 .dashboard-section-header>span {
     color: var(--text-muted);
-    font-size: 14px;
+    font-size: clamp(12px, 1.5vw, 14px);
 }
 
 /* ===================== Quick Actions ===================== */
 .dashboard-quick-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: clamp(12px, 2vw, 20px);
 }
 
 .dashboard-quick-card {
@@ -164,9 +171,10 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
-    padding: 20px 22px;
+    padding: clamp(16px, 2.5vw, 22px);
     text-decoration: none;
     transition: var(--transition);
+    min-width: 0;
 }
 
 .dashboard-quick-card:hover {
@@ -175,14 +183,19 @@
     transform: translateY(-2px);
 }
 
+.dashboard-quick-card>div {
+    flex: 1;
+    min-width: 0;
+}
+
 .dashboard-quick-card>div>h3 {
-    font-size: 16px;
+    font-size: clamp(14px, 1.8vw, 16px);
     font-weight: 600;
     color: var(--text-primary);
 }
 
 .dashboard-quick-card>div>p {
-    font-size: 13px;
+    font-size: clamp(12px, 1.3vw, 13px);
     color: var(--text-muted);
     margin-top: 4px;
 }
@@ -196,9 +209,10 @@
 /* ===================== Recent Table ===================== */
 .dashboard-view-all {
     color: var(--primary);
-    font-size: 14px;
+    font-size: clamp(12px, 1.5vw, 14px);
     font-weight: 600;
     text-decoration: none;
+    white-space: nowrap;
 }
 
 .dashboard-view-all:hover {
@@ -225,13 +239,14 @@
 
 .dashboard-table>thead>tr>th {
     text-align: left;
-    padding: 14px 20px;
-    font-size: 13px;
+    padding: clamp(10px, 1.5vw, 14px) clamp(12px, 2vw, 20px);
+    font-size: clamp(11px, 1.3vw, 13px);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     color: var(--text-secondary);
     border-bottom: 1px solid var(--border);
+    white-space: nowrap;
 }
 
 .dashboard-table>tbody>tr {
@@ -248,8 +263,8 @@
 }
 
 .dashboard-table>tbody>tr>td {
-    padding: 14px 20px;
-    font-size: 15px;
+    padding: clamp(10px, 1.5vw, 14px) clamp(12px, 2vw, 20px);
+    font-size: clamp(13px, 1.5vw, 15px);
     color: var(--text-primary);
 }
 
@@ -261,16 +276,17 @@
 }
 
 .dashboard-student-avatar {
-    width: 34px;
-    height: 34px;
+    width: clamp(28px, 4vw, 34px);
+    height: clamp(28px, 4vw, 34px);
     border-radius: var(--radius-full);
     background-color: var(--secondary-light);
     color: var(--secondary);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    font-size: clamp(10px, 1.2vw, 12px);
     font-weight: 700;
+    flex-shrink: 0;
 }
 
 .dashboard-score {
@@ -281,8 +297,9 @@
     display: inline-block;
     padding: 4px 12px;
     border-radius: var(--radius-full);
-    font-size: 13px;
+    font-size: clamp(11px, 1.3vw, 13px);
     font-weight: 600;
+    white-space: nowrap;
 }
 
 .status-passed {
@@ -293,4 +310,83 @@
 .status-failed {
     background-color: var(--error-light);
     color: var(--error);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .admin-dashboard {
+        gap: 20px;
+    }
+
+    .dashboard-welcome {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .dashboard-cta-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .dashboard-stats {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 12px;
+    }
+
+    .dashboard-stat-card {
+        padding: 16px;
+    }
+
+    .dashboard-quick-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .dashboard-table {
+        min-width: 500px;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-dashboard {
+        gap: 16px;
+    }
+
+    .dashboard-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-stat-card {
+        padding: 14px;
+        gap: 12px;
+    }
+
+    .dashboard-section-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .dashboard-quick-card {
+        padding: 16px;
+    }
+
+    .dashboard-table>thead>tr>th,
+    .dashboard-table>tbody>tr>td {
+        padding: 10px 12px;
+        font-size: 12px;
+    }
+
+    .dashboard-student-name {
+        gap: 8px;
+        font-size: 13px;
+    }
+
+    .dashboard-status {
+        padding: 3px 10px;
+        font-size: 11px;
+    }
 }

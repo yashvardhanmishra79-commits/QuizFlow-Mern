@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   MdCheckCircle,
   MdClose,
@@ -9,24 +9,92 @@ import {
   MdRefresh,
 } from "react-icons/md";
 import "./QuizResult.css";
+import api from "../../api/api";
 
 function QuizResult() {
-  const location = useLocation();
   const navigate = useNavigate();
   const params = useParams();
-
-  const { answers, quiz } = location.state || {};
+  const [searchParams] = useSearchParams();
+  const attemptId = searchParams.get("attemptId");
 
   const [activeTab, setActiveTab] = useState("summary");
   const [expandedQuestions, setExpandedQuestions] = useState(new Set());
+  const [attempt, setAttempt] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
-  // Safe fallback to derive the correct MongoDB quiz ID
-  const targetQuizId = quiz?._id || quiz?.id || params?.quizId || params?.id;
+  useEffect(() => {
+    const controller = new AbortController();
 
-  if (!quiz || !answers) {
-    navigate("/quizzes");
-    return null;
-  }
+    async function loadAttempt() {
+      if (!attemptId) {
+        setLoadError("No saved quiz attempt was specified.");
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setLoadError("");
+      try {
+        const response = await api.get(`/attempts/${attemptId}`, {
+          signal: controller.signal,
+        });
+        const savedAttempt = response.data?.data;
+        const savedQuizId = String(savedAttempt?.quiz?._id || savedAttempt?.quiz);
+
+        if (
+          response.data?.success !== true ||
+          !savedAttempt ||
+          savedQuizId !== String(params.quizId)
+        ) {
+          throw new Error(
+            response.data?.message || "The saved result could not be found."
+          );
+        }
+
+        if (!controller.signal.aborted) {
+          setAttempt(savedAttempt);
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          console.error("Unable to load saved quiz result:", error);
+          setLoadError(
+            error.response?.data?.message ||
+              error.message ||
+              "Unable to load the saved quiz result."
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadAttempt();
+    return () => controller.abort();
+  }, [attemptId, params.quizId]);
+
+  const quiz = attempt
+    ? { ...attempt.quizSnapshot, _id: attempt.quiz }
+    : null;
+  const answers = attempt
+    ? attempt.answers.reduce((normalized, answer, index) => {
+        if (answer !== null && answer !== undefined) {
+          normalized[index] = answer;
+        }
+        return normalized;
+      }, {})
+    : {};
+  const targetQuizId = attempt?.quiz?._id || attempt?.quiz;
+  const totalQuestions = quiz?.questions?.length || 0;
+  const answeredCount = totalQuestions - (attempt?.unansweredCount || 0);
+  const correctCount = attempt?.correctCount || 0;
+  const wrongCount = attempt?.incorrectCount || 0;
+  const unattemptedCount = attempt?.unansweredCount || 0;
+  const totalMarks = attempt?.totalMarks || 0;
+  const obtainedMarks = attempt?.obtainedMarks || 0;
+  const percentage = attempt?.percentage || 0;
 
   const handleReattempt = () => {
     if (!targetQuizId || targetQuizId === "undefined") {
@@ -35,29 +103,6 @@ function QuizResult() {
     }
     navigate(`/quiz/${targetQuizId}/solve`);
   };
-
-  const totalQuestions = quiz.questions?.length || 0;
-  const answeredCount = Object.keys(answers).length;
-  let correctCount = 0;
-  let totalMarks = 0;
-  let obtainedMarks = 0;
-
-  quiz.questions?.forEach((q, index) => {
-    const marks = quiz.correctMarks || 1;
-    totalMarks += marks;
-    const userAnswer = answers[index];
-    const targetCorrectOption = q.correctAnswer !== undefined ? q.correctAnswer : q.correctOption;
-
-    if (userAnswer !== undefined && userAnswer === targetCorrectOption) {
-      correctCount++;
-      obtainedMarks += marks;
-    }
-  });
-
-  const percentage =
-    totalMarks > 0 ? Math.round((obtainedMarks / totalMarks) * 100) : 0;
-  const wrongCount = answeredCount - correctCount;
-  const unattemptedCount = totalQuestions - answeredCount;
 
   const toggleExpand = (questionId) => {
     setExpandedQuestions((prev) => {
@@ -73,10 +118,116 @@ function QuizResult() {
 
   const getStatus = (question, index) => {
     const userAnswer = answers[index];
-    if (userAnswer === undefined) return "unattempted";
+    if (userAnswer === undefined || userAnswer === null) return "unattempted";
     const targetCorrectOption = question.correctAnswer !== undefined ? question.correctAnswer : question.correctOption;
     return userAnswer === targetCorrectOption ? "correct" : "incorrect";
   };
+
+  const handleDownloadReport = () => {
+    if (!attempt || !quiz) {
+      window.alert("The saved quiz result is not available to download.");
+      return;
+    }
+
+    const escapeHtml = (value) =>
+      String(value ?? "").replace(/[&<>"']/g, (character) => {
+        const entities = {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        };
+        return entities[character];
+      });
+    const studentName = attempt.student?.name || "Student";
+    const submittedAt = attempt.submittedAt
+      ? new Date(attempt.submittedAt).toLocaleString()
+      : "Unavailable";
+    const questionRows = quiz.questions
+      .map((question, index) => {
+        const answerIndex = attempt.answers[index];
+        const selectedAnswer =
+          answerIndex === null || answerIndex === undefined
+            ? "Unanswered"
+            : `${String.fromCharCode(65 + answerIndex)}. ${
+                question.options?.[answerIndex] || ""
+              }`;
+        const correctAnswer =
+          question.options?.[question.correctOption] || "Unavailable";
+
+        return `<section><h2>Question ${index + 1}</h2><p>${escapeHtml(
+          question.title
+        )}</p><p><strong>Your answer:</strong> ${escapeHtml(
+          selectedAnswer
+        )}</p><p><strong>Correct answer:</strong> ${escapeHtml(
+          correctAnswer
+        )}</p><p><strong>Explanation:</strong> ${escapeHtml(
+          question.explanation || "No explanation available."
+        )}</p></section>`;
+      })
+      .join("");
+    const title = escapeHtml(quiz.title || "Quiz Result");
+    const report = `<!doctype html><html><head><meta charset="utf-8"><title>${title} - QuizFlow Report</title><style>body{font:16px Arial,sans-serif;max-width:850px;margin:32px auto;padding:0 20px;color:#222}h1{margin-bottom:8px}section{border-top:1px solid #ccc;padding:16px 0;break-inside:avoid}@media print{body{margin:0 auto}}</style></head><body><h1>${title}</h1><p><strong>Student:</strong> ${escapeHtml(
+      studentName
+    )}</p><p><strong>Submitted:</strong> ${escapeHtml(
+      submittedAt
+    )}</p><p><strong>Score:</strong> ${escapeHtml(
+      obtainedMarks
+    )} / ${escapeHtml(totalMarks)} (${escapeHtml(percentage)}%)</p><p><strong>Correct:</strong> ${escapeHtml(
+      correctCount
+    )} &nbsp; <strong>Incorrect:</strong> ${escapeHtml(
+      wrongCount
+    )} &nbsp; <strong>Unanswered:</strong> ${escapeHtml(
+      unattemptedCount
+    )}</p>${questionRows}</body></html>`;
+
+    try {
+      const reportUrl = URL.createObjectURL(
+        new Blob([report], { type: "text/html" })
+      );
+      const downloadLink = document.createElement("a");
+      const filename = (quiz.title || "quiz-result")
+        .replace(/[^a-z0-9-_]+/gi, "-")
+        .replace(/^-|-$/g, "");
+      downloadLink.href = reportUrl;
+      downloadLink.download = `${filename || "quiz-result"}-report.html`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      downloadLink.remove();
+      window.setTimeout(() => URL.revokeObjectURL(reportUrl), 1000);
+    } catch (error) {
+      console.error("Unable to generate quiz report:", error);
+      window.alert("Unable to generate the quiz report. Please try again.");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="quiz-result-page">
+        <main className="result-content">Loading saved quiz result...</main>
+      </div>
+    );
+  }
+
+  if (!attempt || !quiz) {
+    return (
+      <div className="quiz-result-page">
+        <main className="result-content">
+          <div className="result-main">
+            <h2>Result unavailable</h2>
+            <p>{loadError || "The saved quiz result could not be found."}</p>
+            <button
+              className="action-btn outline"
+              onClick={() => navigate("/quizzes")}
+            >
+              Back to Quizzes
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -111,7 +262,6 @@ function QuizResult() {
           <span className="subject-tag">{quiz.subject}</span>
         </div>
         <div className="header-actions">
-          {/* ✅ FIXED: Uses targetQuizId (quiz._id || quiz.id) */}
           <button
             className="action-btn outline"
             onClick={handleReattempt}
@@ -119,7 +269,11 @@ function QuizResult() {
             <MdRefresh />
             <span>Re-attempt</span>
           </button>
-          <button className="action-btn primary">
+          <button
+            className="action-btn primary"
+            onClick={handleDownloadReport}
+            disabled={!attempt}
+          >
             <MdDownload />
             <span>Download Report</span>
           </button>

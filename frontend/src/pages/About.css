@@ -1,13 +1,27 @@
 .about-section {
-  min-height: 100vh;
+  min-height: 100dvh;
   padding: 80px 0;
   background: #f8fafc;
+  box-sizing: border-box;
+  overflow-x: clip;
 }
 
-.container {
+.about-section *,
+.about-section *::before,
+.about-section *::after {
+  box-sizing: border-box;
+}
+
+.about-section img {
+  max-width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.about-section .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 clamp(16px, 4vw, 40px);
 }
 
 /* Hero */
@@ -22,6 +36,16 @@
   color: #1e293b;
   margin-bottom: 16px;
   line-height: 1.2;
+}
+
+.about-hero,
+.about-tagline,
+.mission-section h2,
+.values-section h2,
+.stats-section h2,
+.team-section h2,
+.about-cta h2 {
+  overflow-wrap: anywhere;
 }
 
 .about-hero h1 span {
@@ -56,9 +80,18 @@
 
 .mission-content {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 60px;
   align-items: center;
+}
+
+.mission-text,
+.value-card,
+.stat-card,
+.team-card,
+.about-cta {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .mission-text p {
@@ -70,6 +103,9 @@
 
 .mission-image img {
   width: 100%;
+  max-width: 100%;
+  height: auto;
+  object-fit: cover;
   border-radius: 16px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
@@ -77,7 +113,7 @@
 /* Values */
 .values-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
   gap: 24px;
 }
 
@@ -190,7 +226,7 @@
   z-index: 1;
 
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 
   gap: 16px;
 }
@@ -275,7 +311,7 @@
   display: grid;
 
   grid-template-columns: repeat(auto-fit,
-      minmax(250px, 1fr));
+      minmax(min(100%, 260px), 1fr));
 
   gap: 24px;
 }
@@ -432,78 +468,6 @@
 }
 
 
-/* =========================================
-   RESPONSIVE
-========================================= */
-
-@media (max-width: 900px) {
-
-  .stats-section {
-    padding: 52px 30px;
-  }
-
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .stats-section h2,
-  .team-section h2 {
-    font-size: 2rem;
-  }
-}
-
-
-@media (max-width: 600px) {
-
-  .stats-section {
-    margin: 70px 0;
-    padding: 42px 18px;
-
-    border-radius: 22px;
-  }
-
-  .stats-section h2 {
-    font-size: 1.75rem;
-    margin-bottom: 30px;
-  }
-
-  .stats-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-
-  .stat-card {
-    padding: 22px 12px;
-    border-radius: 14px;
-  }
-
-  .stat-number {
-    font-size: 2.1rem;
-  }
-
-  .stat-label {
-    font-size: 0.78rem;
-  }
-
-  .team-section {
-    margin-bottom: 70px;
-  }
-
-  .team-section h2 {
-    font-size: 1.8rem;
-    margin-bottom: 32px;
-  }
-
-  .team-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .team-card {
-    padding: 30px 22px;
-  }
-}
-
 /* CTA */
 .about-cta {
   text-align: center;
@@ -528,6 +492,8 @@
 .cta-button {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  min-height: 44px;
   gap: 12px;
   padding: 16px 32px;
   background: linear-gradient(135deg, #3b82f6, #8b5cf6);
@@ -544,37 +510,150 @@
   box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
 }
 
-/* Responsive */
-@media (max-width: 900px) {
-  .mission-content {
-    grid-template-columns: 1fr;
-    gap: 40px;
-  }
-
-  .mission-image {
-    order: -1;
-  }
-
-  .about-hero h1 {
-    font-size: 2.5rem;
+@media (min-width: 1024px) {
+  .about-section .container {
+    padding-right: 24px;
+    padding-left: 24px;
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 1023px) {
+  .about-hero h1 {
+    font-size: clamp(1.75rem, 5vw, 3rem);
+  }
+
+  .mission-section h2,
+  .values-section h2,
+  .stats-section h2,
+  .team-section h2 {
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+  }
+
+  .stats-section {
+    padding: 52px 30px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stat-number {
+    font-size: clamp(1.75rem, 4vw, 2.8rem);
+  }
+
+  .values-grid,
+  .team-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
   .about-section {
-    padding: 40px 0;
+    padding: 56px 0;
   }
 
-  .container {
-    padding: 0 16px;
+  .mission-content {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 40px;
   }
 
-  .value-card,
-  .team-card {
-    padding: 24px;
+  .values-grid,
+  .stats-grid,
+  .team-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mission-section,
+  .team-section {
+    margin-bottom: 64px;
+  }
+
+  .about-hero {
+    margin-bottom: 56px;
+  }
+
+  .mission-section h2,
+  .values-section h2,
+  .stats-section h2,
+  .team-section h2 {
+    margin-bottom: 32px;
+  }
+
+  .mission-text p,
+  .value-card p,
+  .stat-label,
+  .team-card p,
+  .team-role,
+  .about-cta p {
+    font-size: 1rem;
+  }
+
+  .stats-section {
+    margin: 64px 0;
+    padding: 40px 24px;
+  }
+
+  .stat-card {
+    padding: 22px 16px;
+  }
+
+  .stat-number {
+    font-size: clamp(1.75rem, 8vw, 2.5rem);
+  }
+
+  .stat-label {
+    overflow-wrap: anywhere;
   }
 
   .about-cta {
     padding: 40px 24px;
+  }
+
+  .cta-button {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .about-section {
+    padding: 40px 0;
+  }
+
+  .value-card,
+  .team-card {
+    padding: 24px 20px;
+  }
+
+  .about-cta {
+    padding: 32px 20px;
+  }
+
+  .about-cta h2 {
+    font-size: clamp(1.5rem, 6vw, 2rem);
+  }
+
+  .cta-button {
+    display: flex;
+    width: 100%;
+    padding: 12px 20px;
+  }
+}
+
+@media (max-width: 900px) and (max-height: 500px) {
+  .about-section {
+    padding-top: 28px;
+    padding-bottom: 28px;
+  }
+
+  .about-hero,
+  .mission-section,
+  .team-section {
+    margin-bottom: 36px;
+  }
+
+  .stats-section {
+    margin: 36px 0;
+    padding-top: 28px;
+    padding-bottom: 28px;
   }
 }

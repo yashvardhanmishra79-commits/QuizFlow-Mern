@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 160" role="img" aria-labelledby="title desc">
+  <title id="title">QuizFlow</title>
+  <desc id="desc">QuizFlow wordmark with a clean violet-to-cyan quiz symbol.</desc>
+  <defs>
+    <linearGradient id="tile" x1="12" y1="10" x2="148" y2="150" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#17152E"/>
+      <stop offset="1" stop-color="#0A1020"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="37" y1="35" x2="130" y2="128" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#C4B5FD"/>
+      <stop offset="0.52" stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#67E8F9"/>
+    </linearGradient>
+    <linearGradient id="word" x1="190" y1="48" x2="520" y2="115" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F5F3FF"/>
+      <stop offset=".7" stop-color="#DDD6FE"/>
+      <stop offset="1" stop-color="#A5F3FC"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(8 8)">
+    <rect width="144" height="144" rx="40" fill="url(#tile)"/>
+    <rect x=".75" y=".75" width="142.5" height="142.5" rx="39.25" fill="none" stroke="#A78BFA" stroke-opacity=".24" stroke-width="1.5"/>
+    <circle cx="69" cy="67" r="40" fill="none" stroke="url(#mark)" stroke-width="9"/>
+    <path d="M96 94 L116 114" fill="none" stroke="url(#mark)" stroke-width="9.5" stroke-linecap="round"/>
+    <path d="M50 67 L63 80 L86 55" fill="none" stroke="#F5F3FF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="112" cy="28" r="3.2" fill="#67E8F9"/>
+    <path d="M112 17 V21 M112 35 V39 M101 28 H105 M119 28 H123" stroke="#A78BFA" stroke-width="2.3" stroke-linecap="round"/>
+  </g>
+  <text x="178" y="101" fill="url(#word)" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="58" font-weight="760" letter-spacing="-2.4">QuizFlow</text>
+  <rect x="180" y="118" width="84" height="4" rx="2" fill="#8B5CF6"/>
+  <rect x="269" y="118" width="28" height="4" rx="2" fill="#67E8F9"/>
+</svg>

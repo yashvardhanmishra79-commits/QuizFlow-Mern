@@ -27,6 +27,8 @@ function QuizSolve() {
   const [answers, setAnswers] = useState({});
   const [flagged, setFlagged] = useState({});
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submissionError, setSubmissionError] = useState("");
 
   useEffect(() => {
     async function getData() {
@@ -84,16 +86,55 @@ function QuizSolve() {
     }
   };
 
-  // Fixed handleSubmit (Line 189 fix)
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (submitting) {
+      return;
+    }
+
     const validId = quiz?._id || quiz?.id || quizId;
 
     if (!validId || validId === "undefined") {
       console.error("Cannot submit: Invalid Quiz ID");
+      setSubmissionError("This quiz has an invalid ID and cannot be submitted.");
       return;
     }
 
-    navigate(`/quiz/${validId}/result`, { state: { answers, quiz } });
+    const requestKey = `quiz-attempt-request-${validId}`;
+    let requestId = sessionStorage.getItem(requestKey);
+    if (!requestId) {
+      requestId =
+        window.crypto?.randomUUID?.() ||
+        `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      sessionStorage.setItem(requestKey, requestId);
+    }
+
+    setSubmitting(true);
+    setSubmissionError("");
+    try {
+      const response = await api.post("/attempts", {
+        quizId: validId,
+        answers,
+        requestId,
+      });
+      const savedAttempt = response.data?.data;
+      if (response.data?.success !== true || !savedAttempt?._id) {
+        throw new Error(
+          response.data?.message || "The quiz attempt could not be saved."
+        );
+      }
+
+      sessionStorage.removeItem(requestKey);
+      navigate(`/quiz/${validId}/result?attemptId=${savedAttempt._id}`);
+    } catch (error) {
+      console.error("Quiz submission failed:", error);
+      setSubmissionError(
+        error.response?.data?.message ||
+          error.message ||
+          "Unable to save your quiz attempt. Please try again."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -244,6 +285,7 @@ function QuizSolve() {
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h3>Submit Quiz?</h3>
             <p>Are you sure you want to submit?</p>
+            {submissionError && <p role="alert">{submissionError}</p>}
             <div className="modal-actions">
               <button
                 className="cancel-btn"
@@ -251,8 +293,12 @@ function QuizSolve() {
               >
                 Cancel
               </button>
-              <button className="confirm-btn" onClick={handleSubmit}>
-                Submit
+              <button
+                className="confirm-btn"
+                onClick={handleSubmit}
+                disabled={submitting}
+              >
+                {submitting ? "Saving..." : "Submit"}
               </button>
             </div>
           </div>

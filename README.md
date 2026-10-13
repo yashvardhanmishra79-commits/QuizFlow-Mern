@@ -103,7 +103,7 @@ QuizFlow/
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 20+
 - MongoDB (local or Atlas)
 - npm or yarn
 
@@ -116,16 +116,34 @@ cd backend
 npm install
 
 # Configure environment
-cp .env-example .env
-# Edit .env with your MongoDB URI and PORT
+cp .env.example .env
+# Edit .env with your MongoDB URI and PORT. Keep this file private.
+
+# Provision the first administrator explicitly before starting the server.
+# Verify the displayed MongoDB host/database, then enter the requested
+# confirmation and administrator details interactively.
+npm run provision-admin
 
 # Start development server
 npm run dev
 ```
 
-**Default Admin Created on First Run:**
-- Email: `admin@quizflow.com`
-- Password: `admin123`
+The provisioning command requires `MONGO_URL` to identify a MongoDB database,
+and refuses to proceed until you confirm the displayed host and database name.
+The administrator password is entered interactively without terminal echo and
+must not be supplied as a command-line argument. Use a private local database
+for development. Before provisioning any shared or production database, verify
+the active `MONGO_URL` and the displayed target carefully; the command refuses
+to create an account if that database already has an administrator.
+This change does not alter existing database accounts. If an earlier deployment
+may already contain an administrator created by the former startup seeder, rotate
+that account's password through an authorized maintenance process; this command
+intentionally refuses to modify existing administrators.
+
+Passwords are stored using Argon2id hashes. Existing plaintext accounts remain
+login-compatible during the transition and are upgraded after a successful
+login. See [Password Migration](#password-migration) before deploying this
+version to a database that already contains users.
 
 ### Frontend Setup
 
@@ -197,13 +215,61 @@ PORT=4400
 
 ## Key Implementation Details
 
-### Auto Admin Seeding
-On backend startup, `seedAdminUser()` checks for existing admin. If none exists, creates:
+### First Administrator Provisioning
+Administrators are not created automatically at backend startup. Run
+`npm run provision-admin` from the backend directory after configuring
+`MONGO_URL`. The command requires explicit interactive input, confirms the
+database target, and refuses to create an administrator if one already exists.
+It never prints the entered password. Do not pass passwords through shell
+arguments or commit environment files.
+
+## Password Migration
+
+New student accounts, student password changes, and provisioned administrators
+use Argon2id. Existing plaintext passwords are verified during login and
+atomically replaced with a hash when safe. A separate migration command can
+convert inactive accounts without requiring users to log in.
+
+Before deployment, take and verify an encrypted, access-restricted database
+backup. Backups, snapshots, replicas, and retained database logs may still
+contain plaintext passwords and must be handled as sensitive data.
+
+Deploy this release as a coordinated cutover: drain all old application
+instances before allowing the new code to upgrade passwords. Old versions
+cannot authenticate accounts after their password has been converted.
+
+From the backend directory, first run the migration in dry-run mode:
+
+```bash
+npm run migrate-passwords -- --dry-run
 ```
-Email: admin@quizflow.com
-Password: admin123
-Role: admin
+
+Review the aggregate counts and the displayed MongoDB host/database. The
+command requires you to type the target to confirm it. It requires an explicit
+`MONGO_URL` and has no default database fallback. Only after confirming the
+target and reviewing the dry-run output, apply the migration:
+
+```bash
+npm run migrate-passwords -- --apply
 ```
+
+The script works in bounded batches. It hashes a legacy password only if the
+stored value is unchanged and no hash exists; it removes a redundant legacy
+value only if the existing valid hash and legacy value remain unchanged. It can
+be restarted after interruption; migrated records are skipped on subsequent
+runs. Review skipped, unsupported, or concurrently changed counts and resolve
+them before considering migration complete. Confirm all accounts have hashes
+and no legacy password values remain before removing transitional legacy login
+support in a later release.
+
+Do not roll back to application code that only understands plaintext after
+hashes have been written. Use a hash-aware release for rollback. Restoring a
+pre-migration backup can reintroduce plaintext passwords; treat that recovery
+as sensitive and repeat migration before returning to service.
+
+All newly set passwords must be at least 12 characters and at most 1024 UTF-8
+bytes. Existing passwords are hashed as-is during migration to avoid changing
+users' credentials. Password hashes are not reversible.
 
 ### Header Behavior
 - **Unauthenticated**: Shows "Login" button
@@ -247,11 +313,10 @@ cd frontend && npm run build
 
 ---
 
-## Default Test Accounts
+## Initial Administrator
 
-After first backend run:
-- **Admin**: `admin@quizflow.com` / `admin123`
-- Create students via Admin Panel → Manage Students
+Provision an administrator explicitly using the steps in [Backend Setup](#backend-setup).
+After signing in, create student accounts via Admin Panel → Manage Students.
 
 ---
 

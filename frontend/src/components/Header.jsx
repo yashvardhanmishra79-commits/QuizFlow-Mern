@@ -1,42 +1,59 @@
-import { useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useContext, useState, useEffect, useRef } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "../context/AuthContext";
+import { MdMenu, MdClose } from "react-icons/md";
 import "./Header.css";
 
 function Header() {
   const { user, logout } = useUser();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const wrapRef = useRef(null);
+
+  // Close on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  // Close on Escape and outside click (only while open)
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+
+    const onKey = (e) => {
+      if (e.key === "Escape") setMobileMenuOpen(false);
+    };
+
+    const onPointerDown = (e) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onPointerDown);
+
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, [mobileMenuOpen]);
 
   const handleLogout = () => {
     logout();
     navigate("/");
+    setMobileMenuOpen(false);
   };
 
   return (
     <header>
-      <div className="header-main">
-        {/* Left Section of Header */}
-        <div className="header-left">
-          <Link to="/" className="logo">
-            <h1>QuizFlow</h1>
-          </Link>
-          <ul>
-            <li>
-              <Link to="/">Home</Link>
-            </li>
-            <li>
-              <Link to="/quizzes">Quizzes</Link>
-            </li>
-            <li>
-              <Link to="/about">About</Link>
-            </li>
-            <li>
-              <Link to="/contact">Contact</Link>
-            </li>
-          </ul>
-        </div>
+      <div className="header-main" ref={wrapRef}>
+        {/* Left Section - Logo */}
+        <Link to="/" className="logo" aria-label="QuizFlow Home">
+          <h1>QuizFlow</h1>
+        </Link>
 
-        {/* Right Section of Header */}
+        {/* Right Section - Login + Hamburger grouped */}
         <div className="header-right">
           {user ? (
             <div className="user-menu">
@@ -61,7 +78,26 @@ function Header() {
               <button className="login-btn">Login</button>
             </Link>
           )}
+          {/* Mobile menu toggle */}
+          <button
+            type="button"
+            className="mobile-menu-toggle"
+            onClick={() => setMobileMenuOpen(o => !o)}
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="primary-nav"
+          >
+            {mobileMenuOpen ? <MdClose /> : <MdMenu />}
+          </button>
         </div>
+
+        {/* Mobile nav dropdown - positioned relative to header-main wrapper */}
+        <nav className={`nav-links ${mobileMenuOpen ? "open" : ""}`} id="primary-nav" aria-label="Main navigation">
+          <Link to="/" onClick={() => setMobileMenuOpen(false)} aria-current={location.pathname === "/" ? "page" : undefined}>Home</Link>
+          <Link to="/quizzes" onClick={() => setMobileMenuOpen(false)} aria-current={location.pathname === "/quizzes" ? "page" : undefined}>Quizzes</Link>
+          <Link to="/about" onClick={() => setMobileMenuOpen(false)} aria-current={location.pathname === "/about" ? "page" : undefined}>About</Link>
+          <Link to="/contact" onClick={() => setMobileMenuOpen(false)} aria-current={location.pathname === "/contact" ? "page" : undefined}>Contact</Link>
+        </nav>
       </div>
     </header>
   );
