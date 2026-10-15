@@ -1,6 +1,6 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { useUser } from "../context/AuthContext";
+import { useUser } from "../context/useUser";
 import { MdDashboard, MdGroup, MdClass, MdOutlineQuiz, MdLogout } from "react-icons/md";
 import { IoCreate } from "react-icons/io5";
 

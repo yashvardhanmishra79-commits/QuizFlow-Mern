@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 const userSchema = mongoose.Schema({
   name: String,   
   email: String,
+  emailNormalized: { type: String, select: false },
   password: { type: String, select: false },
   passwordHash: { type: String, select: false },
   sessionVersion: { type: Number, default: 0, select: false },
@@ -10,10 +11,19 @@ const userSchema = mongoose.Schema({
   batch: { type: mongoose.Schema.Types.ObjectId, ref: "batches" },
 });
 
+userSchema.index(
+  { emailNormalized: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { emailNormalized: { $type: "string" } },
+  }
+);
+
 function removeCredentials(_document, result) {
   delete result.password;
   delete result.passwordHash;
   delete result.sessionVersion;
+  delete result.emailNormalized;
   return result;
 }
 

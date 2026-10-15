@@ -24,62 +24,7 @@ function QuizList() {
   // ============================================
   useEffect(() => {
     const controller = new AbortController();
-
-    const storedUserData = localStorage.getItem("userData");
-
-    // CHECK LOGIN
-    if (!storedUserData) {
-      alert("Please login to access quizzes");
-      navigate("/login");
-      return () => controller.abort();
-    }
-
-    let userData;
-
-    // PARSE USER DATA
-    try {
-      userData = JSON.parse(storedUserData);
-    } catch (err) {
-      console.error("Invalid userData:", err);
-
-      localStorage.removeItem("userData");
-      navigate("/login");
-      return () => controller.abort();
-    }
-
-    if (!localStorage.getItem("authToken")) {
-      setError("Your session has expired. Please sign in again.");
-      setLoading(false);
-      navigate("/login");
-      return () => controller.abort();
-    }
-
-    // CHECK BATCH
-    if (!userData.batch) {
-      console.error("Batch is missing from userData");
-
-      setError(
-        "Your account is not assigned to a batch. Please contact the administrator."
-      );
-
-      setLoading(false);
-      return () => controller.abort();
-    }
-
-    // GET BATCH ID
-    const batchId =
-      typeof userData.batch === "object"
-        ? userData.batch?._id
-        : userData.batch;
-
-    // VALIDATE BATCH ID
-    if (!batchId) {
-      console.error("Invalid batch:", userData.batch);
-
-      setError("Invalid batch assigned to your account.");
-      setLoading(false);
-      return () => controller.abort();
-    }
+    let batchId;
 
     async function getData() {
       try {
@@ -167,7 +112,58 @@ function QuizList() {
       }
     }
 
-    getData();
+    Promise.resolve().then(() => {
+      if (controller.signal.aborted) {
+        return;
+      }
+
+      const storedUserData = localStorage.getItem("userData");
+      if (!storedUserData) {
+        alert("Please login to access quizzes");
+        navigate("/login");
+        return;
+      }
+
+      let userData;
+      try {
+        userData = JSON.parse(storedUserData);
+      } catch (error) {
+        console.error("Invalid userData:", error);
+        localStorage.removeItem("userData");
+        navigate("/login");
+        return;
+      }
+
+      if (!localStorage.getItem("authToken")) {
+        setError("Your session has expired. Please sign in again.");
+        setLoading(false);
+        navigate("/login");
+        return;
+      }
+
+      if (!userData.batch) {
+        console.error("Batch is missing from userData");
+        setError(
+          "Your account is not assigned to a batch. Please contact the administrator."
+        );
+        setLoading(false);
+        return;
+      }
+
+      batchId =
+        typeof userData.batch === "object"
+          ? userData.batch?._id
+          : userData.batch;
+
+      if (!batchId) {
+        console.error("Invalid batch:", userData.batch);
+        setError("Invalid batch assigned to your account.");
+        setLoading(false);
+        return;
+      }
+
+      getData();
+    });
 
     return () => controller.abort();
   }, [navigate]);

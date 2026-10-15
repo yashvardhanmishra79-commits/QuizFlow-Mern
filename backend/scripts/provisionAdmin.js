@@ -136,7 +136,7 @@ async function provisionAdmin() {
     }
 
     const name = (await ask("Administrator name: ")).trim();
-    const email = (await ask("Administrator email: ")).trim();
+    const email = (await ask("Administrator email: ")).trim().toLowerCase();
     if (!name || name.length > 100) {
       throw new ProvisioningError(
         "Enter a name between 1 and 100 characters."
@@ -147,6 +147,16 @@ async function provisionAdmin() {
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
     ) {
       throw new ProvisioningError("Enter a valid administrator email address.");
+    }
+    const escapedEmail = email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (
+      await User.findOne({
+        email: { $regex: `^${escapedEmail}$`, $options: "i" },
+      })
+    ) {
+      throw new ProvisioningError(
+        "An account with this email address already exists."
+      );
     }
 
     const password = await askHidden("Administrator password (hidden): ");
@@ -170,6 +180,7 @@ async function provisionAdmin() {
     await new User({
       name,
       email,
+      emailNormalized: email,
       passwordHash,
       role: "admin",
     }).save();

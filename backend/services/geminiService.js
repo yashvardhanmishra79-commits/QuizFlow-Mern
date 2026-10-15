@@ -1,4 +1,12 @@
 import { GoogleGenAI, Type } from "@google/genai";
+import { validateMarkingScheme } from "../utils/quizMarks.js";
+import {
+  RequestValidationError,
+  requireText,
+  validateQuestionCount,
+  validateQuizContent,
+  validateObjectId,
+} from "../utils/validation.js";
 
 /**
  * Normalizes an option index that may be a number or a letter ("A", "B", "C", "D")
@@ -14,72 +22,72 @@ function normalizeCorrectOption(val) {
     if (letterMap[trimmed] !== undefined) {
       return letterMap[trimmed];
     }
-    const parsed = parseInt(trimmed, 10);
-    if (!Number.isNaN(parsed)) {
-      if (parsed >= 0 && parsed <= 3) return parsed;
-      // If 1-indexed (1 to 4)
-      if (parsed >= 1 && parsed <= 4) return parsed - 1;
-    }
   }
-  return 0; // Safe fallback
+  throw new RequestValidationError(
+    "AI-generated correct-option indices must be 0 to 3 or A to D."
+  );
 }
 
 /**
  * Validates and converts raw generated data into the exact schema
  * expected by the existing Quiz model and QuizBuilderService.
  */
-export function validateAndFormatQuizData(raw, { topic, batch, correctMarks, incorrectMarks, difficulty }) {
-  if (!raw || typeof raw !== "object") {
-    throw new Error("Invalid AI response: Expected a JSON object.");
+export function validateAndFormatQuizData(
+  raw,
+  { batch, correctMarks, incorrectMarks, questionCount }
+) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    throw new RequestValidationError("Invalid AI response: expected an object.");
   }
 
-  const rawQuestions = Array.isArray(raw.questions) ? raw.questions : [];
-  if (rawQuestions.length === 0) {
-    throw new Error("AI did not return any questions. Please try again.");
+  if (!Array.isArray(raw.questions) || raw.questions.length === 0) {
+    throw new RequestValidationError(
+      "AI did not return any questions. Please try again."
+    );
+  }
+  if (
+    questionCount !== undefined &&
+    raw.questions.length !== validateQuestionCount(questionCount)
+  ) {
+    throw new RequestValidationError(
+      `AI must return exactly ${questionCount} questions.`
+    );
   }
 
-  const validatedQuestions = rawQuestions.map((q, idx) => {
-    const title = typeof q.title === "string" && q.title.trim()
-      ? q.title.trim()
-      : `Question ${idx + 1}`;
-
-    let options = Array.isArray(q.options)
-      ? q.options.map((opt) => (typeof opt === "string" ? opt.trim() : String(opt || "").trim()))
-      : [];
-
-    // Ensure exactly 4 options
-    if (options.length < 4) {
-      while (options.length < 4) {
-        options.push(`Option ${String.fromCharCode(65 + options.length)}`);
-      }
-    } else if (options.length > 4) {
-      options = options.slice(0, 4);
+  const questions = raw.questions.map((question, index) => {
+    if (!question || typeof question !== "object" || Array.isArray(question)) {
+      throw new RequestValidationError(
+        `AI-generated question ${index + 1} must be an object.`
+      );
     }
 
-    const correctOption = normalizeCorrectOption(q.correctOption);
-
-    const explanation = typeof q.explanation === "string" && q.explanation.trim()
-      ? q.explanation.trim()
-      : `The correct option is: ${options[correctOption] || "Option A"}`;
-
+    const explanation = requireText(
+      question.explanation,
+      `AI-generated question ${index + 1} explanation`,
+      4000
+    );
     return {
-      title,
-      options,
-      correctOption,
+      title: question.title,
+      options: question.options,
+      correctOption: normalizeCorrectOption(question.correctOption),
       explanation,
     };
   });
 
-  const quizTitle = typeof raw.title === "string" && raw.title.trim()
-    ? raw.title.trim()
-    : `${topic} Quiz (${difficulty || "General"})`;
+  const quizContent = validateQuizContent({
+    title: raw.title,
+    batch,
+    questions,
+  });
+  const markingScheme = validateMarkingScheme(
+    correctMarks,
+    incorrectMarks,
+    questions.length
+  );
 
   return {
-    title: quizTitle,
-    batch: batch || "",
-    correctMarks: Number(correctMarks) >= 0 ? Number(correctMarks) : 1,
-    incorrectMarks: Number(incorrectMarks) >= 0 ? Number(incorrectMarks) : 0,
-    questions: validatedQuestions,
+    ...quizContent,
+    ...markingScheme,
   };
 }
 
@@ -87,27 +95,35 @@ export function validateAndFormatQuizData(raw, { topic, batch, correctMarks, inc
  * Calls Google Gemini API using @google/genai SDK to generate
  * a structured multiple choice quiz.
  */
-export async function generateQuizWithAI({
-  topic,
-  batch,
-  difficulty = "Medium",
-  questionCount = 5,
-  correctMarks = 1,
-  incorrectMarks = 0,
-}) {
+export async function generateQuizWithAI(
+  {
+    topic,
+    batch,
+    difficulty = "Medium",
+    questionCount = 5,
+    correctMarks = 1,
+    incorrectMarks = 0,
+  },
+  createClient = (apiKey) => new GoogleGenAI({ apiKey })
+) {
+  topic = requireText(topic, "Topic", 200);
+  batch = validateObjectId(batch, "batch ID");
+  questionCount = validateQuestionCount(questionCount);
+  difficulty = requireText(difficulty, "Difficulty", 40);
+  validateMarkingScheme(correctMarks, incorrectMarks, questionCount);
+
   const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
   if (!apiKey || !apiKey.trim() || apiKey === "your_gemini_api_key_here") {
     const error = new Error(
-      "Gemini API key is not configured. Please add GEMINI_API_KEY to your backend/.env file."
+      "Gemini API key is not configured."
     );
-    error.statusCode = 400;
+    error.statusCode = 503;
     throw error;
   }
 
-  const ai = new GoogleGenAI({ apiKey: apiKey.trim() });
+  const ai = createClient(apiKey.trim());
 
-  const safeCount = Math.max(1, Math.min(20, Number(questionCount) || 5));
   const candidateModels = [
     process.env.GEMINI_MODEL,
     "gemini-3.8-flash",
@@ -117,7 +133,7 @@ export async function generateQuizWithAI({
   const uniqueModels = [...new Set(candidateModels)];
 
   const prompt = `Generate a ${difficulty}-level multiple-choice quiz about "${topic}".
-Generate exactly ${safeCount} multiple-choice questions.
+Generate exactly ${questionCount} multiple-choice questions.
 
 Requirements:
 - Each question must test understanding of the topic with realistic choices.
@@ -193,17 +209,19 @@ Requirements:
         throw new Error(`Failed to parse AI response as JSON: ${parseErr.message}`);
       }
 
-      return validateAndFormatQuizData(parsed, {
-        topic,
+      const formattedQuiz = validateAndFormatQuizData(parsed, {
         batch,
         correctMarks,
         incorrectMarks,
-        difficulty,
+        questionCount,
       });
+      return formattedQuiz;
     } catch (err) {
       lastError = err;
       // If error is 404 (model not found), continue to try next candidate model
-      const isNotFound = err.message && (err.message.includes("not found") || err.message.includes("404"));
+      const isNotFound =
+        err.message &&
+        (err.message.includes("not found") || err.message.includes("404"));
       if (!isNotFound) {
         // For auth or quota errors, don't keep trying models
         break;
@@ -211,5 +229,8 @@ Requirements:
     }
   }
 
-  throw lastError || new Error("Failed to generate quiz with Gemini.");
+  const generationError = new Error("Gemini generation request failed.");
+  generationError.statusCode = 502;
+  generationError.cause = lastError;
+  throw generationError;
 }

@@ -1,4 +1,5 @@
 import express from "express";
+import Batch from "../models/Batch.js";
 import User from "../models/User.js";
 import {
   createSession,
@@ -14,44 +15,96 @@ import {
   verifyLegacyPassword,
   verifyPassword,
 } from "../utils/passwordSecurity.js";
+import {
+  isDuplicateKeyError,
+  isValidationError,
+  requireObjectBody,
+  requireText,
+  validateEmail,
+  validateObjectId,
+} from "../utils/validation.js";
+import { withBatchAssignment } from "../utils/batchAssignments.js";
 
 const router = express.Router();
 
-// =========================
-// ADD USER
-// =========================
+function safeStudentData(user) {
+  return {
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    batch: user.batch,
+  };
+}
+
+function emailLookup(email) {
+  const escapedEmail = email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return { email: { $regex: `^${escapedEmail}$`, $options: "i" } };
+}
+
+function sendRouteError(res, error, fallbackMessage) {
+  if (error instanceof PasswordPolicyError || isValidationError(error)) {
+    return res.status(400).send({ success: false, message: error.message });
+  }
+  if (error.statusCode === 400) {
+    return res.status(400).send({ success: false, message: error.message });
+  }
+  if (error.statusCode === 404) {
+    return res.status(404).send({ success: false, message: error.message });
+  }
+  if (error.statusCode === 409) {
+    return res.status(409).send({ success: false, message: error.message });
+  }
+  if (isDuplicateKeyError(error)) {
+    return res.status(409).send({
+      success: false,
+      message: "An account with this email address already exists.",
+    });
+  }
+  console.error(fallbackMessage, error?.name || "Error");
+  return res.status(500).send({ success: false, message: fallbackMessage });
+}
 
 router.post("/add-user", requireAdmin, async (req, res) => {
   try {
-    const { name, email, password, batch } = req.body;
+    const body = requireObjectBody(req.body);
+    const name = requireText(body.name, "Name", 100);
+    const email = validateEmail(body.email);
+    const password = body.password;
+    const batch = validateObjectId(body.batch, "batch ID");
+    if (typeof password !== "string") {
+      return res.status(400).send({
+        success: false,
+        message: "Password must be a string.",
+      });
+    }
+    if (await User.findOne(emailLookup(email))) {
+      return res.status(409).send({
+        success: false,
+        message: "An account with this email address already exists.",
+      });
+    }
+
     const newUser = new User({
       name,
       email,
+      emailNormalized: email,
       passwordHash: await hashPassword(password),
       batch,
       role: "student",
     });
 
-    const newUserData = await newUser.save();
+    const newUserData = await withBatchAssignment(batch, () =>
+      newUser.save()
+    );
 
-    res.send({
+    return res.status(201).send({
       success: true,
       message: "User Added Successfully",
-      data: newUserData,
+      data: safeStudentData(newUserData),
     });
   } catch (error) {
-    if (error instanceof PasswordPolicyError) {
-      return res.status(400).send({
-        success: false,
-        message: error.message,
-      });
-    }
-    console.error("Add user error:", error?.name || "Error");
-
-    res.status(500).send({
-      success: false,
-      message: "Error Adding User",
-    });
+    return sendRouteError(res, error, "Unable to add user.");
   }
 });
 
@@ -61,16 +114,20 @@ router.post("/add-user", requireAdmin, async (req, res) => {
 
 router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
-
-    if (typeof email !== "string" || typeof password !== "string") {
-      return res.send({
+    const body = requireObjectBody(req.body);
+    const email = validateEmail(body.email);
+    const password = body.password;
+    if (
+      typeof password !== "string" ||
+      Buffer.byteLength(password, "utf8") > 1024 * 1024
+    ) {
+      return res.status(400).send({
         success: false,
-        message: "Email Or Password Is Invalid",
+        message: "Email or password is invalid.",
       });
     }
 
-    let userData = await User.findOne({ email }).select(
+    let userData = await User.findOne(emailLookup(email)).select(
       "+password +passwordHash +sessionVersion"
     );
     if (!userData) {
@@ -152,9 +209,7 @@ router.post("/login", async (req, res) => {
       userData._id,
       userData.sessionVersion ?? 0
     );
-    const safeUserData = userData.toObject();
-    delete safeUserData.password;
-    delete safeUserData.passwordHash;
+    const safeUserData = safeStudentData(userData);
 
     res.send({
       success: true,
@@ -163,12 +218,7 @@ router.post("/login", async (req, res) => {
       authToken,
     });
   } catch (error) {
-    console.error("Login error:", error?.name || "Error");
-
-    res.status(500).send({
-      success: false,
-      message: "Login Error",
-    });
+    return sendRouteError(res, error, "Unable to sign in.");
   }
 });
 
@@ -200,22 +250,16 @@ router.post("/logout", async (req, res) => {
 router.get("/get-all-students", requireAdmin, async (req, res) => {
   try {
     const allStudents = await User.find({ role: "student" }).select(
-      "-password"
+      "-password -passwordHash -sessionVersion"
     );
 
-    res.send({
+    return res.send({
       success: true,
       message: "Success",
-      data: allStudents,
+      data: allStudents.map(safeStudentData),
     });
   } catch (error) {
-    console.error("Get students error:", error);
-
-    res.status(500).send({
-      success: false,
-      message: "Error Fetching Students",
-      error: error.message,
-    });
+    return sendRouteError(res, error, "Unable to fetch students.");
   }
 });
 
@@ -225,14 +269,8 @@ router.get("/get-all-students", requireAdmin, async (req, res) => {
 
 router.post("/delete-user", requireAdmin, async (req, res) => {
   try {
-    const { userId } = req.body;
-
-    if (!userId) {
-      return res.send({
-        success: false,
-        message: "User ID is required",
-      });
-    }
+    const body = requireObjectBody(req.body);
+    const userId = validateObjectId(body.userId, "user ID");
 
     const deletedUser = await User.findOneAndDelete({
       _id: userId,
@@ -240,25 +278,19 @@ router.post("/delete-user", requireAdmin, async (req, res) => {
     });
 
     if (!deletedUser) {
-      return res.send({
+      return res.status(404).send({
         success: false,
-        message: "Student not found",
+        message: "Student not found.",
       });
     }
 
-    res.send({
+    return res.send({
       success: true,
       message: "Student Deleted Successfully",
-      data: deletedUser,
+      data: safeStudentData(deletedUser),
     });
   } catch (error) {
-    console.error("Delete user error:", error);
-
-    res.status(500).send({
-      success: false,
-      message: "Error Deleting Student",
-      error: error.message,
-    });
+    return sendRouteError(res, error, "Unable to delete student.");
   }
 });
 
@@ -268,24 +300,27 @@ router.post("/delete-user", requireAdmin, async (req, res) => {
 
 router.post("/update-user", requireAdmin, async (req, res) => {
   try {
-    const {
-      userId,
-      name,
-      email,
-      password,
-      batch,
-    } = req.body;
-
-    if (!userId) {
-      return res.send({
+    const body = requireObjectBody(req.body);
+    const userId = validateObjectId(body.userId, "user ID");
+    const name = requireText(body.name, "Name", 100);
+    const email = validateEmail(body.email);
+    const batch = validateObjectId(body.batch, "batch ID");
+    const password = body.password;
+    const duplicateEmail = await User.findOne({
+      ...emailLookup(email),
+      _id: { $ne: userId },
+    });
+    if (duplicateEmail) {
+      return res.status(409).send({
         success: false,
-        message: "User ID is required",
+        message: "An account with this email address already exists.",
       });
     }
 
     const updateData = {
       name,
       email,
+      emailNormalized: email,
       batch,
     };
 
@@ -307,39 +342,30 @@ router.post("/update-user", requireAdmin, async (req, res) => {
       update.$inc = { sessionVersion: 1 };
     }
 
-    const updatedUser = await User.findOneAndUpdate(
-      { _id: userId, role: "student" },
-      update,
-      {
-        new: true,
-      }
+    const updatedUser = await withBatchAssignment(batch, () =>
+      User.findOneAndUpdate(
+        { _id: userId, role: "student" },
+        update,
+        {
+          new: true,
+        }
+      )
     );
 
     if (!updatedUser) {
-      return res.send({
+      return res.status(404).send({
         success: false,
-        message: "Student not found",
+        message: "Student not found.",
       });
     }
 
-    res.send({
+    return res.send({
       success: true,
       message: "Student Updated Successfully",
-      data: updatedUser,
+      data: safeStudentData(updatedUser),
     });
   } catch (error) {
-    if (error instanceof PasswordPolicyError) {
-      return res.status(400).send({
-        success: false,
-        message: error.message,
-      });
-    }
-    console.error("Update user error:", error?.name || "Error");
-
-    res.status(500).send({
-      success: false,
-      message: "Error Updating Student",
-    });
+    return sendRouteError(res, error, "Unable to update student.");
   }
 });
 

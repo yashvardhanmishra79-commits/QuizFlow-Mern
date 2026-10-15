@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useUser } from "../context/AuthContext";
+import { useUser } from "../context/useUser";
 import "./Login.css";
 import { MdQuiz } from "react-icons/md";
 import { MdMailOutline } from "react-icons/md";
 import { MdLockOutline } from "react-icons/md";
+import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 import api from "../api/api";
 
 function Login() {
@@ -14,6 +15,7 @@ function Login() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { login } = useUser();
 
@@ -41,7 +43,7 @@ function Login() {
       } else {
         setError(response.data?.message || "Login Failed");
       }
-    } catch (err) {
+    } catch {
       setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
@@ -84,15 +86,23 @@ function Login() {
 
         <div className="form-rows">
           <label htmlFor="">Password</label>
-          <div className="form-input">
+          <div className="form-input password-input-wrapper">
             <MdLockOutline className="form-input-icon" />
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               name="password"
               value={data.password}
               onChange={handleChange}
               autoComplete="current-password"
             />
+            <button
+              type="button"
+              className="password-visibility-toggle"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              onClick={() => setShowPassword((visible) => !visible)}
+            >
+              {showPassword ? <MdVisibilityOff /> : <MdVisibility />}
+            </button>
           </div>
         </div>
 

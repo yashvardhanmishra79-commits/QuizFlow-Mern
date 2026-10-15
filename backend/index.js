@@ -6,41 +6,70 @@ import quizRoutes from "./routes/quizRoutes.js";
 import attemptRoutes from "./routes/attemptRoutes.js";
 import dotenv from "dotenv";
 import cors from "cors";
+import { pathToFileURL } from "node:url";
 
-dotenv.config();
+export function createApp({ quizRouter = quizRoutes } = {}) {
+  const app = express();
+  app.use(cors());
+  app.use(express.json());
 
-// Logic to connect to Database:
-async function connectToDB() {
-  try {
-    const MONGO_URL =
-      process.env.MONGO_URL || "mongodb://localhost:27017/quizflow";
-    await mongoose.connect(MONGO_URL);
-    console.log("✅ Connected To DB!!...");
-  } catch (err) {
-    console.log("❌ DB Connection Failed...", err?.name || "Error");
-  }
+  app.get("/health", (_req, res) => {
+    res.send("Server Is Running Perfectly!!");
+  });
+  app.use("/user", userRoutes);
+  app.use("/batch", batchRoutes);
+  app.use("/quiz", quizRouter);
+  app.use("/attempts", attemptRoutes);
+
+  app.use((error, _req, res, next) => {
+    if (res.headersSent) {
+      return next(error);
+    }
+    if (error?.type === "entity.too.large") {
+      return res.status(413).send({
+        success: false,
+        message: "Request body exceeds the allowed size.",
+      });
+    }
+    if (error?.status === 400 && error?.type?.startsWith("entity.")) {
+      return res.status(400).send({
+        success: false,
+        message: "Request body contains invalid JSON or exceeds the allowed size.",
+      });
+    }
+    console.error("Unhandled request error:", error?.name || "Error");
+    return res.status(500).send({
+      success: false,
+      message: "An internal server error occurred.",
+    });
+  });
+
+  return app;
 }
 
-connectToDB();
+async function connectToDB() {
+  const mongoUrl =
+    process.env.MONGO_URL || "mongodb://localhost:27017/quizflow";
+  await mongoose.connect(mongoUrl);
+  console.log("Connected to MongoDB.");
+}
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+export async function startServer() {
+  dotenv.config();
+  const databaseConnection = connectToDB().catch((error) => {
+    console.error("Database connection failed:", error?.name || "Error");
+  });
+  const port = process.env.PORT || 4400;
+  const server = createApp().listen(port, () => {
+    console.log(`Server is running at http://localhost:${port}/health`);
+  });
+  await databaseConnection;
+  return server;
+}
 
-app.get("/health", (req, res) => {
-  res.send("Server Is Running Perfectly!!");
-});
-app.use("/user", userRoutes);
-app.use("/batch", batchRoutes);
-app.use("/quiz", quizRoutes);
-app.use("/attempts", attemptRoutes);
-
-const PORT = process.env.PORT || 4400;
-app.listen(PORT, () => {
-  console.log(`Server Is Running at:\nhttp://localhost:${PORT}/health`);
-});
-
-// npm init -y
-// npm i express cors mongoose
-// npm i nodemon -g
-// npm run dev
+if (
+  process.argv[1] &&
+  pathToFileURL(process.argv[1]).href === import.meta.url
+) {
+  await startServer();
+}

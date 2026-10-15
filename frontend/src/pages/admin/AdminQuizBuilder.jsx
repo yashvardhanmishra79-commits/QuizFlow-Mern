@@ -15,6 +15,7 @@ function AdminQuizBuilder() {
     quizSettings,
     handleQuizSettingsChange,
     handleSubmit,
+    resetQuiz,
     batches,
     populateQuizData,
     generateAiQuiz,
@@ -33,6 +34,35 @@ function AdminQuizBuilder() {
     correctMarks: quizSettings.correctMarks || 1,
     incorrectMarks: quizSettings.incorrectMarks || 0,
   });
+
+  const handleSaveQuiz = async () => {
+    try {
+      const saved = await handleSubmit();
+      if (!saved) {
+        return;
+      }
+
+      resetQuiz();
+      setNotification("");
+      setAiError("");
+      setIsAiModalOpen(false);
+      setIsGenerating(false);
+      setAiForm({
+        topic: "",
+        batch: "",
+        difficulty: "Medium",
+        questionCount: 5,
+        correctMarks: 1,
+        incorrectMarks: 0,
+      });
+    } catch (error) {
+      alert(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to save the quiz. Your changes have been preserved."
+      );
+    }
+  };
 
   const handleOpenAiModal = () => {
     setAiForm((prev) => ({
@@ -65,8 +95,8 @@ function AdminQuizBuilder() {
         batch: aiForm.batch || quizSettings.batch,
         difficulty: aiForm.difficulty,
         questionCount: Number(aiForm.questionCount) || 5,
-        correctMarks: Number(aiForm.correctMarks),
-        incorrectMarks: Number(aiForm.incorrectMarks),
+        correctMarks: aiForm.correctMarks,
+        incorrectMarks: aiForm.incorrectMarks,
       });
 
       if (response && response.success && response.data) {
@@ -122,7 +152,7 @@ function AdminQuizBuilder() {
               <MdAutoAwesome /> Create With AI
             </span>
           </button>
-          <button onClick={handleSubmit}>Save Quiz</button>
+          <button type="button" onClick={handleSaveQuiz}>Save Quiz</button>
         </div>
       </div>
 
@@ -244,6 +274,8 @@ function AdminQuizBuilder() {
                 <label>Correct</label>
                 <input
                   type="number"
+                  min="0"
+                  step="any"
                   value={quizSettings.correctMarks}
                   onChange={(e) =>
                     handleQuizSettingsChange("correctMarks", e.target.value)
@@ -255,6 +287,7 @@ function AdminQuizBuilder() {
                 <label>Incorrect</label>
                 <input
                   type="number"
+                  step="any"
                   value={quizSettings.incorrectMarks}
                   onChange={(e) =>
                     handleQuizSettingsChange("incorrectMarks", e.target.value)
@@ -364,6 +397,7 @@ function AdminQuizBuilder() {
                   <input
                     type="number"
                     min="0"
+                    step="any"
                     value={aiForm.correctMarks}
                     disabled={isGenerating}
                     onChange={(e) =>
@@ -376,7 +410,7 @@ function AdminQuizBuilder() {
                   <label>Incorrect Marks</label>
                   <input
                     type="number"
-                    min="0"
+                    step="any"
                     value={aiForm.incorrectMarks}
                     disabled={isGenerating}
                     onChange={(e) =>

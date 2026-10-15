@@ -1,360 +1,208 @@
-# QuizFlow - Quiz Management Platform
+# QuizFlow
 
-A modern, full-stack quiz management platform built for coaching institutes. Features include quiz creation, batch management, student assessments, and detailed analytics.
+QuizFlow is a full-stack quiz management application for coaching institutes. Administrators manage student accounts, batches, quizzes, and results. Students can take quizzes assigned to their batch and review their saved attempts. The public `/demo` page uses sample data and does not create backend records.
 
-## Tech Stack
+## Technology
 
-**Frontend:**
-- React 18 + Vite
-- React Router v6
-- Axios for API calls
-- React Icons
-- CSS Variables for theming
+- Frontend: React 19, React Router 7, Vite 8, Axios, and React Icons
+- Backend: Node.js (20.19+ or 22.12+), Express 5, Mongoose 9, and MongoDB
+- Authentication: database-backed, opaque bearer sessions; session tokens are stored server-side as hashes. Authentication does not use JWTs.
+- Passwords: Argon2id for newly set passwords, with a compatibility path for legacy password migration
+- AI quiz generation: Google Gemini through `@google/genai`; only required when an administrator uses AI generation
+- Automated backend tests: Node.js built-in `node:test` and `assert/strict`; no database or API key is required to run them
 
-**Backend:**
-- Node.js + Express
-- MongoDB + Mongoose
-- JWT-ready authentication structure
-- CORS enabled
+Exact dependency ranges and lockfile versions are recorded in `backend/package.json`, `backend/package-lock.json`, `frontend/package.json`, and `frontend/package-lock.json`.
 
----
+## Requirements
 
-## Project Structure
+- Node.js 20.19+ (or 22.12+) and npm
+- A MongoDB database for running the backend
+- A Gemini API key only if using AI quiz generation
 
-```
-QuizFlow/
-├── backend/
-│   ├── index.js              # Entry point, DB connection, admin seeding
-│   ├── models/
-│   │   ├── User.js           # User schema (student/admin)
-│   │   ├── Quiz.js           # Quiz schema
-│   │   └── Batch.js          # Batch schema
-│   ├── routes/
-│   │   ├── userRoutes.js     # Auth & user management
-│   │   ├── quizRoutes.js     # Quiz CRUD
-│   │   └── batchRoutes.js    # Batch CRUD
-│   ├── package.json
-│   └── .env                  # Environment variables
-│
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   └── Header.jsx    # Dynamic header with auth state
-│   │   ├── contexts/
-│   │   │   └── AuthContext.jsx  # Global auth state
-│   │   ├── layouts/
-│   │   │   ├── PublicLayout.jsx
-│   │   │   └── AdminLayout.jsx
-│   │   ├── pages/
-│   │   │   ├── Home.jsx           # Landing page
-│   │   │   ├── Login.jsx          # Login with role-based redirect
-│   │   │   ├── About.jsx          # About page
-│   │   │   ├── Contact.jsx        # Contact page with form & FAQ
-│   │   │   ├── student/
-│   │   │   │   ├── QuizList.jsx
-│   │   │   │   ├── QuizSolve.jsx
-│   │   │   │   └── QuizResult.jsx
-│   │   │   └── admin/
-│   │   │       ├── AdminDashboard.jsx
-│   │   │       ├── AdminQuizBuilder.jsx
-│   │   │       ├── AdminManageStudents.jsx
-│   │   │       ├── AdminManageBatches.jsx
-│   │   │       └── AdminManageQuizzes.jsx
-│   │   ├── api/
-│   │   │   └── api.jsx           # Axios instance
-│   │   ├── App.jsx               # Routes configuration
-│   │   ├── main.jsx              # Entry point
-│   │   └── index.css             # Global styles & CSS variables
-│   ├── package.json
-│   └── vite.config.js
-│
-└── README.md
-```
+## Setup
 
----
+### Backend
 
-## Features
+In PowerShell:
 
-### Authentication & Authorization
-- Role-based access control (Admin / Student)
-- Auto-creates default admin on first backend startup
-- Session persistence via localStorage
-- Protected routes for admin panel
-
-### Admin Panel
-- **Dashboard** - Overview statistics
-- **Quiz Builder** - Create quizzes with questions, marking schemes, time limits
-- **Manage Quizzes** - List, edit, delete quizzes
-- **Manage Batches** - Create batches, assign students
-- **Manage Students** - View all students, batch assignments
-
-### Student Portal
-- **Quiz List** - View assigned quizzes by batch
-- **Solve Quiz** - Timed quiz interface with navigation
-- **Quiz Results** - Detailed score breakdown, correct/incorrect answers
-
-### Public Pages
-- **Home** - Landing page with features & CTA
-- **About** - Mission, values, stats, team
-- **Contact** - Contact form, info cards, FAQ accordion
-
----
-
-## Getting Started
-
-### Prerequisites
-- Node.js 20+
-- MongoDB (local or Atlas)
-- npm or yarn
-
-### Backend Setup
-
-```bash
-cd backend
-
-# Install dependencies
+```powershell
+Set-Location backend
 npm install
+Copy-Item .env.example .env
+```
 
-# Configure environment
-cp .env.example .env
-# Edit .env with your MongoDB URI and PORT. Keep this file private.
+Edit `backend/.env` with a private MongoDB connection string. The local defaults are `PORT=4400` and `MONGO_URL=mongodb://localhost:27017/quizflow`. Add `GEMINI_API_KEY` only to enable AI quiz generation; never commit the `.env` file or share its contents.
 
-# Provision the first administrator explicitly before starting the server.
-# Verify the displayed MongoDB host/database, then enter the requested
-# confirmation and administrator details interactively.
+Provision the first administrator explicitly:
+
+```powershell
 npm run provision-admin
+```
 
-# Start development server
+The provisioning script requires interactive confirmation of the target MongoDB host and database. It refuses to create another administrator when one already exists. Do not supply a password as a command-line argument.
+
+Start the backend:
+
+```powershell
 npm run dev
 ```
 
-The provisioning command requires `MONGO_URL` to identify a MongoDB database,
-and refuses to proceed until you confirm the displayed host and database name.
-The administrator password is entered interactively without terminal echo and
-must not be supplied as a command-line argument. Use a private local database
-for development. Before provisioning any shared or production database, verify
-the active `MONGO_URL` and the displayed target carefully; the command refuses
-to create an account if that database already has an administrator.
-This change does not alter existing database accounts. If an earlier deployment
-may already contain an administrator created by the former startup seeder, rotate
-that account's password through an authorized maintenance process; this command
-intentionally refuses to modify existing administrators.
+The server listens on `http://localhost:4400` by default and exposes `GET /health`. It attempts the MongoDB connection on startup and logs connection failures; database-backed requests return safe errors until the database is available. `PORT` and `MONGO_URL` can be set in the backend environment.
 
-Passwords are stored using Argon2id hashes. Existing plaintext accounts remain
-login-compatible during the transition and are upgraded after a successful
-login. See [Password Migration](#password-migration) before deploying this
-version to a database that already contains users.
+### Frontend
 
-### Frontend Setup
+In a second terminal, from the repository root:
 
-```bash
-cd frontend
-
-# Install dependencies
+```powershell
+Set-Location frontend
 npm install
-
-# Start development server
+Copy-Item .env.example .env
 npm run dev
 ```
 
-Frontend runs at `http://localhost:5173` (default Vite port)
-Backend runs at `http://localhost:4400` (configurable via .env)
+The example sets `VITE_API_URL=http://localhost:4400`, matching the backend default. Set `VITE_API_URL` to the deployed backend origin for another environment; do not replace deployed URLs with local values. Vite serves the frontend at `http://localhost:5173` by default.
 
----
+### Tests and frontend checks
 
-## Environment Variables
+Backend tests use mocks and do not load `.env`, connect to MongoDB, or call Gemini:
 
-### Backend (.env)
-```env
-MONGO_URL=mongodb://localhost:27017/quizflow
-PORT=4400
+```powershell
+Set-Location backend
+npm test
 ```
 
----
+Frontend scripts, run from `frontend`:
 
-## API Endpoints
+```powershell
+npm run lint
+npm run build
+```
 
-### Authentication
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/user/login` | User login |
-| POST | `/user/add-user` | Create new user (admin only) |
-| GET | `/user/get-all-students` | List all students |
+## Environment variables
 
-### Quizzes
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/quiz/add-quiz` | Create quiz |
-| POST | `/quiz/delete-quiz` | Delete quiz |
-| GET | `/quiz/get-all` | List all quizzes |
-| GET | `/quiz/:batchId` | Get quizzes by batch |
-| GET | `/quiz/single/:quizId` | Get single quiz |
+### Backend (`backend/.env`)
 
-### Batches
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/batch/add-batch` | Create batch |
-| GET | `/batch/get-all` | List all batches |
-| GET | `/batch/:batchId` | Get batch details |
+| Variable | Default / purpose |
+| --- | --- |
+| `PORT` | `4400`, HTTP server port |
+| `MONGO_URL` | `mongodb://localhost:27017/quizflow`, MongoDB connection URI |
+| `GEMINI_API_KEY` | Optional secret; needed only for AI quiz generation |
+| `GEMINI_MODEL` | Optional Gemini model override; defaults to `gemini-3.8-flash` |
 
----
+The AI service also accepts `GOOGLE_API_KEY` as a compatibility alias. Keep all real credentials in ignored local environment files or the deployment platform's secret store.
 
-## User Roles
+### Frontend (`frontend/.env`)
 
-### Admin
-- Access to `/admin/*` routes
-- Create/manage quizzes, batches, students
-- View all analytics
+| Variable | Default / purpose |
+| --- | --- |
+| `VITE_API_URL` | `http://localhost:4400`, backend origin used by Axios |
 
-### Student
-- Access to `/quizzes`, `/quiz/:id/solve`, `/quiz/:id/result`
-- Take assigned quizzes
-- View personal results
+Only `*.example` environment files belong in version control. Do not put secrets in `VITE_*` variables; Vite exposes them to browser code.
 
----
+## Application behavior
 
-## Key Implementation Details
+- Administrators create batches and student accounts, assign students to batches, create quizzes manually or with Gemini, and review dashboard results.
+- Account email addresses are trimmed, lowercased, and checked case-insensitively. A partial unique index protects records with `emailNormalized`; legacy documents without that field are not covered until backfilled. Existing duplicate normalized values can prevent index creation.
+- A quiz has a title, one existing batch, one or more multiple-choice questions with exactly four nonempty options, and a marking scheme.
+- Correct-answer marks must be finite and positive. Incorrect-answer marks may be zero or negative, including decimals. Unanswered questions receive zero marks; totals and percentages can be negative.
+- Students can read only quizzes assigned to their batch. Student quiz-reading responses omit correct-option indices and explanations. Saved attempts retain a quiz snapshot so historical results remain readable.
+- A submission request ID prevents accidental duplicate saves. Students can only read their own saved attempts.
+- Batch assignments and deletion coordinate through atomic state on each batch. Assignment writers acquire a claim before saving or reassigning a student or quiz; deletion can proceed only when no claims are pending and blocks new claims while checking references.
+- Deploy the batch-claim protocol as a coordinated cutover: older backend instances do not participate and must be drained before batch deletion is enabled.
+- The `/demo` route uses frontend sample data only. It does not call the backend or create real quiz attempts.
 
-### First Administrator Provisioning
-Administrators are not created automatically at backend startup. Run
-`npm run provision-admin` from the backend directory after configuring
-`MONGO_URL`. The command requires explicit interactive input, confirms the
-database target, and refuses to create an administrator if one already exists.
-It never prints the entered password. Do not pass passwords through shell
-arguments or commit environment files.
+### Recovering interrupted batch operations
 
-## Password Migration
+Assignment claims are stored in `batches.pendingAssignments`, and a deletion claim is stored in `batches.deletionInProgress`. If a server process exits before releasing a claim, these fields may remain set. Diagnose affected records with a read-only query in `mongosh`:
 
-New student accounts, student password changes, and provisioned administrators
-use Argon2id. Existing plaintext passwords are verified during login and
-atomically replaced with a hash when safe. A separate migration command can
-convert inactive accounts without requiring users to log in.
+```javascript
+db.batches.find(
+  { $or: [{ pendingAssignments: { $gt: 0 } }, { deletionInProgress: true }] },
+  { name: 1, pendingAssignments: 1, deletionInProgress: 1 }
+)
+```
 
-Before deployment, take and verify an encrypted, access-restricted database
-backup. Backups, snapshots, replicas, and retained database logs may still
-contain plaintext passwords and must be handled as sensitive data.
+Do not clear state while any backend instance or assignment writer is running. Stop all application instances, confirm no request is still in flight, and inspect `users` and `quizes` for references to each affected batch. Only after that review, an operator may reset stale state with `db.batches.updateOne({ _id: ObjectId("<batch-id>") }, { $set: { pendingAssignments: 0, deletionInProgress: false } })`. Referenced batches remain protected by the normal deletion check after recovery. Do not reset the counter or deletion flag while application writers are active.
 
-Deploy this release as a coordinated cutover: drain all old application
-instances before allowing the new code to upgrade passwords. Old versions
-cannot authenticate accounts after their password has been converted.
+## API
 
-From the backend directory, first run the migration in dry-run mode:
+All paths below are relative to the backend origin. Authenticated requests use `Authorization: Bearer <session-token>`. The session token returned by a successful login is required by the client for subsequent authenticated requests.
 
-```bash
+### Health and accounts (`/health`, `/user`)
+
+| Method | Path | Access | Purpose |
+| --- | --- | --- | --- |
+| `GET` | `/health` | Public | Health check |
+| `POST` | `/user/login` | Public | Authenticate and create a session |
+| `POST` | `/user/logout` | Public; revokes the supplied bearer session when present | End the current session |
+| `POST` | `/user/add-user` | Admin | Create a student account |
+| `GET` | `/user/get-all-students` | Admin | List student accounts without credentials |
+| `POST` | `/user/update-user` | Admin | Update a student's name, email, batch, or password |
+| `POST` | `/user/delete-user` | Admin | Delete a student account |
+
+### Batches (`/batch`)
+
+| Method | Path | Access | Purpose |
+| --- | --- | --- | --- |
+| `GET` | `/batch/get-all` | Public | List batches for account and quiz forms |
+| `POST` | `/batch/add-batch` | Admin | Create a batch |
+| `POST` | `/batch/update-batch` | Admin | Rename a batch |
+| `POST` | `/batch/delete-batch` | Admin | Delete an unreferenced batch |
+
+### Quizzes (`/quiz`)
+
+| Method | Path | Access | Purpose |
+| --- | --- | --- | --- |
+| `POST` | `/quiz/add-quiz` | Admin | Create a quiz |
+| `POST` | `/quiz/delete-quiz` | Admin | Delete a quiz |
+| `POST` | `/quiz/generate-ai-quiz` | Admin; Gemini key required | Generate validated quiz content |
+| `GET` | `/quiz/get-all` | Admin | List quizzes for administration |
+| `GET` | `/quiz/:batchId` | Student assigned to that batch | List quizzes in the student's batch |
+| `GET` | `/quiz/single/:quizId` | Student assigned to the quiz batch | Read one quiz without answer keys |
+
+### Attempts (`/attempts`)
+
+| Method | Path | Access | Purpose |
+| --- | --- | --- | --- |
+| `POST` | `/attempts` | Student | Grade and save a quiz attempt |
+| `GET` | `/attempts/mine` | Student | List the authenticated student's attempts |
+| `GET` | `/attempts/admin/recent` | Admin | Dashboard recent results and average percentage |
+| `GET` | `/attempts/:attemptId` | Student; owner only | Read one saved attempt |
+
+## Password migration
+
+New passwords must be at least 12 characters and no more than 1024 UTF-8 bytes. Legacy passwords are still verified during login and upgraded after successful authentication. The backend also provides an explicit migration script for inactive accounts.
+
+Before migrating an existing database, take and verify an encrypted, access-restricted backup. Deploy this release as a coordinated cutover: drain older application instances before allowing passwords to be converted, since older versions may not understand Argon2id hashes.
+
+Run a dry run first, from `backend`:
+
+```powershell
 npm run migrate-passwords -- --dry-run
 ```
 
-Review the aggregate counts and the displayed MongoDB host/database. The
-command requires you to type the target to confirm it. It requires an explicit
-`MONGO_URL` and has no default database fallback. Only after confirming the
-target and reviewing the dry-run output, apply the migration:
+Review the reported database target and aggregate counts, then apply only after explicit confirmation:
 
-```bash
+```powershell
 npm run migrate-passwords -- --apply
 ```
 
-The script works in bounded batches. It hashes a legacy password only if the
-stored value is unchanged and no hash exists; it removes a redundant legacy
-value only if the existing valid hash and legacy value remain unchanged. It can
-be restarted after interruption; migrated records are skipped on subsequent
-runs. Review skipped, unsupported, or concurrently changed counts and resolve
-them before considering migration complete. Confirm all accounts have hashes
-and no legacy password values remain before removing transitional legacy login
-support in a later release.
+The migration requires an explicit `MONGO_URL`, confirms the target interactively, and can be restarted after interruption. Do not roll back to code that only supports plaintext passwords after hashes have been written. Treat any backup that predates migration as sensitive.
 
-Do not roll back to application code that only understands plaintext after
-hashes have been written. Use a hash-aware release for rollback. Restoring a
-pre-migration backup can reintroduce plaintext passwords; treat that recovery
-as sensitive and repeat migration before returning to service.
+## Email normalization migration
 
-All newly set passwords must be at least 12 characters and at most 1024 UTF-8
-bytes. Existing passwords are hashed as-is during migration to avoid changing
-users' credentials. Password hashes are not reversible.
+The `users.emailNormalized` field is protected by a **partial unique index**. Existing records without that field are outside the index until backfilled. A duplicate canonical email can prevent creation of the index. The migration reads the native `users` collection with Mongoose automatic index creation disabled, checks case-insensitive normalized addresses across all records, and reports duplicate or invalid-record IDs before changing anything. It never deletes, merges, or chooses an account.
 
-### Header Behavior
-- **Unauthenticated**: Shows "Login" button
-- **Authenticated Student**: Shows "Solve Quiz" + "Logout"
-- **Authenticated Admin**: Shows "Admin Panel" + "Logout"
+For an existing database, run this migration before starting the release that declares the unique index; normal application startup may attempt to create that index. Stop backend writes and configure `MONGO_URL` in the process environment or `backend/.env`. The apply step uses temporary unique values before writing canonical addresses, so it can safely normalize around an existing unique index; if interrupted, rerun the dry run and apply command. Run the default dry run from `backend`:
 
-### Login Redirect Logic
-```javascript
-if (userData.role === "admin") {
-  navigate("/admin");
-} else {
-  navigate("/quizzes");
-}
+```powershell
+npm run migrate-emails
 ```
 
-### CSS Variables (Design System)
-Defined in `frontend/src/index.css`:
-- Colors: Primary, Secondary, Success, Error, Warning
-- Typography: Inter font family
-- Spacing, Radius, Shadows, Transitions
-- Dark mode ready structure
+If duplicates or invalid emails are reported, resolve them manually and rerun the dry run. Do not run the apply command until the preview is clear and the intended database has been verified. Then explicitly apply the idempotent backfill and create/verify the partial unique index:
 
----
-
-## Development
-
-### Run Both Servers
-```bash
-# Terminal 1 - Backend
-cd backend && npm run dev
-
-# Terminal 2 - Frontend
-cd frontend && npm run dev
+```powershell
+npm run migrate-emails -- --apply
 ```
 
-### Build for Production
-```bash
-cd frontend && npm run build
-# Output in frontend/dist/
-```
-
----
-
-## Initial Administrator
-
-Provision an administrator explicitly using the steps in [Backend Setup](#backend-setup).
-After signing in, create student accounts via Admin Panel → Manage Students.
-
----
-
-## Folder Aliases (Vite)
-```javascript
-// vite.config.js
-resolve: {
-  alias: {
-    '@': '/src',
-    '@components': '/src/components',
-    '@pages': '/src/pages',
-    '@api': '/src/api',
-  }
-}
-```
-
----
-
-## Future Enhancements
-- [ ] JWT token authentication with refresh tokens
-- [ ] Email verification & password reset
-- [ ] AI-powered question generation
-- [ ] Real-time quiz sessions
-- [ ] Export results to PDF/Excel
-- [ ] Student performance analytics charts
-- [ ] Multi-language support
-- [ ] Dark mode toggle
-
----
-
-## License
-
-MIT License - Feel free to use for educational and commercial projects.
-
----
-
-## Support
-
-For issues or feature requests, please create an issue in the repository.
-
-**Contact:** support@quizflow.com
+Keep application writes stopped until the migration and index creation complete. The utility was not run as part of this code change; run it only against an explicitly authorized database after backup and review.

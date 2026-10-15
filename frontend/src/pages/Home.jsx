@@ -48,7 +48,9 @@ function Home() {
               <MdArrowRight />
               <span>Start Now</span>
             </Link>
-            <button className="btn btn-outline">View Demo</button>
+            <Link to="/demo" className="btn btn-outline">
+              View Demo
+            </Link>
           </div>
         </div>
         <div className="hero-right">

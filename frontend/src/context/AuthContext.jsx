@@ -1,26 +1,27 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { useState } from "react";
 import api from "../api/api";
+import { AuthContextProvider } from "./authContext";
 
-const AuthContextProvider = createContext();
+function getInitialUser() {
+  const storedUser = localStorage.getItem("userData");
+  if (!storedUser) {
+    return null;
+  }
+
+  try {
+    const parsedUser = JSON.parse(storedUser);
+    const safeUser = { ...parsedUser };
+    delete safeUser.password;
+    localStorage.setItem("userData", JSON.stringify(safeUser));
+    return safeUser;
+  } catch {
+    localStorage.removeItem("userData");
+    return null;
+  }
+}
 
 function AuthContext({ children }) {
-  const [user, setUser] = useState(null);
-
-  // Initialize user from localStorage on mount
-  useEffect(() => {
-    const storedUser = localStorage.getItem("userData");
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        const safeUser = { ...parsedUser };
-        delete safeUser.password;
-        setUser(safeUser);
-        localStorage.setItem("userData", JSON.stringify(safeUser));
-      } catch (e) {
-        localStorage.removeItem("userData");
-      }
-    }
-  }, []);
+  const [user, setUser] = useState(getInitialUser);
 
   const login = (userData, authToken) => {
     if (!authToken) {
@@ -56,11 +57,6 @@ function AuthContext({ children }) {
       {children}
     </AuthContextProvider.Provider>
   );
-}
-
-export function useUser() {
-  const data = useContext(AuthContextProvider);
-  return data;
 }
 
 export default AuthContext;

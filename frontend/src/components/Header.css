@@ -262,6 +262,31 @@ header {
     }
 }
 
+@media (max-width: 240px) {
+    .header-main {
+        padding-inline: 8px;
+        gap: 4px;
+    }
+
+    .header-right {
+        flex: 1 0 100%;
+        width: 100%;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .login-btn {
+        width: 68px;
+        height: 36px;
+        font-size: 12px;
+    }
+
+    .mobile-menu-toggle {
+        width: 40px;
+        height: 40px;
+    }
+}
+
 /* Desktop nav at 769px+ */
 @media (min-width: 769px) {
     .mobile-menu-toggle {

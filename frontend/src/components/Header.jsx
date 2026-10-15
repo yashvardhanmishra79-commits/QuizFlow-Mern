@@ -1,6 +1,6 @@
-import { useContext, useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useUser } from "../context/AuthContext";
+import { useUser } from "../context/useUser";
 import { MdMenu, MdClose } from "react-icons/md";
 import "./Header.css";
 
@@ -11,10 +11,12 @@ function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const wrapRef = useRef(null);
 
-  // Close on route change
+  // Close the menu when browser back or forward changes the route.
   useEffect(() => {
-    setMobileMenuOpen(false);
-  }, [location.pathname]);
+    const closeMenu = () => setMobileMenuOpen(false);
+    window.addEventListener("popstate", closeMenu);
+    return () => window.removeEventListener("popstate", closeMenu);
+  }, []);
 
   // Close on Escape and outside click (only while open)
   useEffect(() => {

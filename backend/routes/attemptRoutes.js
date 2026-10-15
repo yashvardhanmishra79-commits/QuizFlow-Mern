@@ -1,24 +1,39 @@
 import express from "express";
-import mongoose from "mongoose";
 import Quiz from "../models/Quiz.js";
 import QuizAttempt from "../models/QuizAttempt.js";
 import { requireAdmin, requireStudent } from "../middleware/auth.js";
+import {
+  calculateQuizScore,
+  MarkingValidationError,
+  validateMarkingScheme,
+} from "../utils/quizMarks.js";
+import {
+  RequestValidationError,
+  requireObjectBody,
+  validateObjectId,
+} from "../utils/validation.js";
 
 const router = express.Router();
 
 router.post("/", requireStudent, async (req, res) => {
-  const { quizId, answers, requestId } = req.body || {};
-
-  if (!mongoose.isValidObjectId(quizId)) {
-    return res.status(400).send({
-      success: false,
-      message: "A valid quiz ID is required.",
-    });
+  let quizId;
+  let answers;
+  let requestId;
+  try {
+    const body = requireObjectBody(req.body);
+    quizId = validateObjectId(body.quizId, "quiz ID");
+    answers = body.answers;
+    requestId = body.requestId;
+  } catch (error) {
+    if (!(error instanceof RequestValidationError)) {
+      throw error;
+    }
+    return res.status(400).send({ success: false, message: error.message });
   }
 
   if (
     typeof requestId !== "string" ||
-    requestId.length < 8 ||
+    requestId.trim().length < 8 ||
     requestId.length > 128
   ) {
     return res.status(400).send({
@@ -106,25 +121,37 @@ router.post("/", requireStudent, async (req, res) => {
         ? answers[index]
         : null
     );
-    const correctCount = normalizedAnswers.reduce(
-      (count, answer, index) =>
-        answer !== null && answer === questions[index].correctOption
-          ? count + 1
-          : count,
-      0
-    );
-    const answeredCount = normalizedAnswers.filter(
-      (answer) => answer !== null
-    ).length;
-    const incorrectCount = answeredCount - correctCount;
-    const unansweredCount = questions.length - answeredCount;
-
-    // Match the existing result page: only correct answers earn marks.
-    const correctMarks = Number(quiz.correctMarks) || 1;
-    const totalMarks = questions.length * correctMarks;
-    const obtainedMarks = correctCount * correctMarks;
-    const percentage =
-      totalMarks > 0 ? Math.round((obtainedMarks / totalMarks) * 100) : 0;
+    let markingScheme;
+    let score;
+    try {
+      markingScheme = validateMarkingScheme(
+        quiz.correctMarks ?? 1,
+        quiz.incorrectMarks ?? 0,
+        questions.length
+      );
+      score = calculateQuizScore({
+        questions,
+        answers: normalizedAnswers,
+        ...markingScheme,
+      });
+    } catch (error) {
+      if (!(error instanceof MarkingValidationError)) {
+        throw error;
+      }
+      return res.status(error.statusCode || 400).send({
+        success: false,
+        message: error.message,
+      });
+    }
+    const {
+      correctCount,
+      incorrectCount,
+      unansweredCount,
+      totalMarks,
+      obtainedMarks,
+      percentage,
+    } = score;
+    const { correctMarks, incorrectMarks } = markingScheme;
 
     try {
       const attempt = await QuizAttempt.create({
@@ -135,7 +162,7 @@ router.post("/", requireStudent, async (req, res) => {
           title: quiz.title || "",
           batchName: quiz.batch?.name || "",
           correctMarks,
-          incorrectMarks: Number(quiz.incorrectMarks) || 0,
+          incorrectMarks,
           questions: questions.map((question) => ({
             title: question.title || "",
             options: question.options || [],
@@ -227,7 +254,7 @@ router.get("/admin/recent", requireAdmin, async (_req, res) => {
       QuizAttempt.aggregate([
         {
           $match: {
-            percentage: { $type: "number", $gte: 0, $lte: 100 },
+            percentage: { $type: "number", $lte: 100 },
           },
         },
         {
@@ -265,16 +292,22 @@ router.get("/admin/recent", requireAdmin, async (_req, res) => {
 });
 
 router.get("/:attemptId", requireStudent, async (req, res) => {
-  if (!mongoose.isValidObjectId(req.params.attemptId)) {
+  let attemptId;
+  try {
+    attemptId = validateObjectId(req.params.attemptId, "attempt ID");
+  } catch (error) {
+    if (!(error instanceof RequestValidationError)) {
+      throw error;
+    }
     return res.status(400).send({
       success: false,
-      message: "A valid attempt ID is required.",
+      message: error.message,
     });
   }
 
   try {
     const attempt = await QuizAttempt.findOne({
-      _id: req.params.attemptId,
+      _id: attemptId,
       student: req.student._id,
     }).populate("student", "name");
 

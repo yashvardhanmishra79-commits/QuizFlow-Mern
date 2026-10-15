@@ -283,7 +283,10 @@ function QuizResult() {
       <div className="result-content">
         <aside className="result-sidebar">
           <div className="score-card">
-            <div className="score-circle" style={{ "--score": percentage }}>
+            <div
+              className="score-circle"
+              style={{ "--score": Math.max(0, Math.min(percentage, 100)) }}
+            >
               <span className="score-value">{percentage}%</span>
               <span className="score-label">Score</span>
             </div>
@@ -470,11 +473,13 @@ function QuizResult() {
                             const isUserAnswer = userAnswer === optIndex;
                             const isCorrectAnswer = targetCorrectOption === optIndex;
                             let optionClass = "";
-                            if (isCorrectAnswer) optionClass = "correct-answer";
-                            else if (isUserAnswer && !isCorrectAnswer)
-                              optionClass = "user-wrong";
-                            else if (isUserAnswer && isCorrectAnswer)
-                              optionClass = "user-correct";
+                            if (isUserAnswer) {
+                              optionClass = isCorrectAnswer
+                                ? "user-correct"
+                                : "user-wrong";
+                            } else if (isCorrectAnswer) {
+                              optionClass = "correct-answer";
+                            }
 
                             return (
                               <div

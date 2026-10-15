@@ -96,6 +96,39 @@
     box-sizing: border-box;
 }
 
+.password-visibility-toggle {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    transform: translateY(-50%);
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 21px;
+    cursor: pointer;
+}
+
+.form-rows>div.password-input-wrapper {
+    position: relative;
+    padding-right: 58px;
+}
+
+.password-visibility-toggle:hover {
+    color: var(--primary);
+    background: var(--primary-light);
+}
+
+.password-visibility-toggle:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 1px;
+}
+
 .form-rows>label {
     font-weight: 500;
     font-size: clamp(13px, 1.2vw, 15px);

@@ -1,49 +1,59 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import api from "../api/api";
-import { useEffect } from "react";
 
-function useQuiz() {
-  const [questions, setQuestions] = useState([
-    {
-      title: "",
-      options: ["", "", "", ""],
-      correctOption: 1,
-      explanation: "",
-    },
-  ]);
-  const [quizSettings, setQuizSetting] = useState({
+function createBlankQuestion() {
+  return {
+    title: "",
+    options: ["", "", "", ""],
+    correctOption: 0,
+    explanation: "",
+  };
+}
+
+function createDefaultQuizSettings() {
+  return {
     quizTitle: "",
     batch: "",
-    correctMarks: 0,
+    correctMarks: 1,
     incorrectMarks: 0,
-  });
+  };
+}
+
+function useQuiz() {
+  const [questions, setQuestions] = useState([createBlankQuestion()]);
+  const [quizSettings, setQuizSetting] = useState(createDefaultQuizSettings);
 
   const [batches, setBatches] = useState([]);
 
-  async function getBatches() {
-    const response = await api.get("/batch/get-all");
-    if (response.data?.success) {
-      setBatches(response.data?.data);
-    }
-  }
-
   useEffect(() => {
-    getBatches();
+    let active = true;
+    api
+      .get("/batch/get-all")
+      .then((response) => {
+        if (active && response.data?.success) {
+          setBatches(response.data?.data);
+        }
+      })
+      .catch((error) => {
+        console.error("Unable to load quiz-builder batches:", error);
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   function handleQuizSettingsChange(field, value) {
     setQuizSetting({ ...quizSettings, [field]: value });
   }
 
-  function addQuestion() {
-    const newQuestion = {
-      title: "",
-      options: ["", "", "", ""],
-      correctOption: 0,
-      explanation: "",
-    };
+  function resetQuiz() {
+    setQuestions([createBlankQuestion()]);
+    setQuizSetting(createDefaultQuizSettings());
+  }
 
-    setQuestions([...questions, newQuestion]);
+  function addQuestion() {
+    setQuestions([...questions, createBlankQuestion()]);
   }
 
   function handleQuestionChange(index, fieldName, value) {
@@ -109,8 +119,10 @@ function useQuiz() {
     const response = await api.post("/quiz/add-quiz", data);
     if (response.data?.success) {
       alert("Quiz Added Successfully");
+      return true;
     } else {
       alert("Some Error Occured...");
+      return false;
     }
   }
 
@@ -126,6 +138,7 @@ function useQuiz() {
     setQuizSetting,
     handleQuizSettingsChange,
     handleSubmit,
+    resetQuiz,
     batches,
     populateQuizData,
     generateAiQuiz,
