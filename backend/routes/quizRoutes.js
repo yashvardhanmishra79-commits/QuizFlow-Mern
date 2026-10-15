@@ -5,6 +5,7 @@ import { generateQuizWithAI } from "../services/geminiService.js";
 import { requireAdmin, requireStudent } from "../middleware/auth.js";
 import { validateMarkingScheme } from "../utils/quizMarks.js";
 import { withBatchAssignment } from "../utils/batchAssignments.js";
+import { createAiRateLimiters } from "../middleware/rateLimits.js";
 import {
   isDuplicateKeyError,
   isValidationError,
@@ -15,7 +16,10 @@ import {
   validateQuizContent,
 } from "../utils/validation.js";
 
-export function createQuizRouter(generateQuiz = generateQuizWithAI) {
+export function createQuizRouter(
+  generateQuiz = generateQuizWithAI,
+  rateLimiters = createAiRateLimiters()
+) {
   const router = express.Router();
 
   function sendQuizError(res, error, fallbackMessage) {
@@ -50,7 +54,7 @@ export function createQuizRouter(generateQuiz = generateQuizWithAI) {
     return res.status(500).send({ success: false, message: fallbackMessage });
   }
 
-  router.post("/generate-ai-quiz", requireAdmin, async (req, res) => {
+  router.post("/generate-ai-quiz", requireAdmin, rateLimiters.ip, rateLimiters.user, async (req, res) => {
     try {
       const body = requireObjectBody(req.body);
       const topic = requireText(body.topic, "Topic", 200);

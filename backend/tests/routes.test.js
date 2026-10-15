@@ -9,6 +9,10 @@ import QuizAttempt from "../models/QuizAttempt.js";
 import Session from "../models/Session.js";
 import User from "../models/User.js";
 import { createQuizRouter } from "../routes/quizRoutes.js";
+import {
+  createAiRateLimiters,
+  createLoginRateLimiter,
+} from "../middleware/rateLimits.js";
 import { hashPassword } from "../utils/passwordSecurity.js";
 
 const studentId = "64b000000000000000000010";
@@ -36,12 +40,18 @@ function replaceMethod(t, target, method, replacement) {
 
 function mockBatchProtocol(
   t,
-  { exists = true, pendingAssignments = 0, student = null, quiz = null } = {}
+  {
+    exists = true,
+    pendingAssignments = 0,
+    legacy = false,
+    student = null,
+    quiz = null,
+  } = {}
 ) {
   const state = {
     exists,
     deleting: false,
-    pendingAssignments,
+    pendingAssignments: legacy ? undefined : pendingAssignments,
     student,
     quiz,
     assignmentClaims: 0,
@@ -67,10 +77,15 @@ function mockBatchProtocol(
         { pendingAssignments: 0 },
         { pendingAssignments: { $exists: false } },
       ]);
-      if (state.deleting || state.pendingAssignments !== 0) {
+      assert.equal(update.$set.pendingAssignments, 0);
+      if (
+        state.deleting ||
+        (state.pendingAssignments !== 0 && state.pendingAssignments !== undefined)
+      ) {
         return null;
       }
       state.deleting = true;
+      state.pendingAssignments = update.$set.pendingAssignments;
       state.deletionClaims += 1;
       return { _id: batchId };
     }
@@ -116,16 +131,30 @@ async function startApi(
     batch = batchId,
     authenticated = true,
     quizGenerator,
+    quizRouter,
+    loginLimiter,
+    userByToken = {},
   } = {}
 ) {
   if (authenticated) {
-    replaceMethod(t, Session, "findOne", async () => ({
-      user: studentId,
-      sessionVersion: 0,
-    }));
+    let authenticatedUserId = studentId;
+    const usersByTokenHash = new Map(
+      Object.entries(userByToken).map(([authToken, userId]) => [
+        createHash("sha256").update(authToken).digest("hex"),
+        userId,
+      ])
+    );
+    replaceMethod(t, Session, "findOne", async (filter) => {
+      authenticatedUserId =
+        usersByTokenHash.get(filter.tokenHash) || studentId;
+      return {
+        user: authenticatedUserId,
+        sessionVersion: 0,
+      };
+    });
     replaceMethod(t, User, "findById", () => ({
       select: async () => ({
-        _id: studentId,
+        _id: authenticatedUserId,
         name: "Test User",
         role,
         batch,
@@ -136,12 +165,15 @@ async function startApi(
 
   const server = createServer(
     createApp({
-      quizRouter: quizGenerator
-        ? createQuizRouter(quizGenerator)
-        : undefined,
+      loginLimiter,
+      quizRouter:
+        quizRouter ||
+        (quizGenerator ? createQuizRouter(quizGenerator) : undefined),
     })
   );
-  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  await new Promise((resolve) =>
+    server.listen(0, "127.0.0.1", resolve)
+  );
   t.after(
     () =>
       new Promise((resolve, reject) => {
@@ -151,13 +183,22 @@ async function startApi(
   return `http://127.0.0.1:${server.address().port}`;
 }
 
-async function request(baseUrl, path, { method = "GET", body, authenticated = true } = {}) {
+async function request(
+  baseUrl,
+  path,
+  {
+    method = "GET",
+    body,
+    authenticated = true,
+    authToken = token,
+  } = {}
+) {
   const headers = {};
   if (body !== undefined) {
     headers["content-type"] = "application/json";
   }
   if (authenticated) {
-    headers.authorization = `Bearer ${token}`;
+    headers.authorization = `Bearer ${authToken}`;
   }
   const response = await fetch(`${baseUrl}${path}`, {
     method,
@@ -250,6 +291,41 @@ test("login returns the bearer token only with safe user data and stores its has
     createHash("sha256").update(response.body.authToken).digest("hex")
   );
   assert.equal(Object.hasOwn(createdSession, "token"), false);
+});
+
+test("login rate limiting returns 429 per client IP without invoking login handler", async (t) => {
+  const loginLimiter = createLoginRateLimiter({
+    windowMs: 60_000,
+    limit: 2,
+  });
+  const api = await startApi(t, {
+    authenticated: false,
+    loginLimiter,
+  });
+  let loginLookups = 0;
+  replaceMethod(t, User, "findOne", () => ({
+    select: async () => {
+      loginLookups += 1;
+      return null;
+    },
+  }));
+
+  const loginRequest = () =>
+    request(api, "/user/login", {
+      method: "POST",
+      authenticated: false,
+      body: { email: "unknown@example.com", password: "wrong-password" },
+    });
+
+  assert.equal((await loginRequest()).status, 200);
+  assert.equal((await loginRequest()).status, 200);
+  const limited = await loginRequest();
+  assert.equal(limited.status, 429);
+  assert.equal(limited.body.success, false);
+  assert.equal(loginLookups, 2);
+
+  const healthResponse = await fetch(`${api}/health`);
+  assert.equal(healthResponse.status, 200);
 });
 
 test("student quiz reads enforce batch ownership and exclude answer fields", async (t) => {
@@ -544,10 +620,126 @@ test("AI quiz generation claims its batch and releases the claim", async (t) => 
   assert.equal(batchState.pendingAssignments, 0);
 });
 
+test("AI generation is limited by client IP and authenticated admin user", async (t) => {
+  const generated = {
+    title: "Generated quiz",
+    batch: batchId,
+    correctMarks: 1,
+    incorrectMarks: 0,
+    questions: [
+      {
+        title: "Question",
+        options: ["A", "B", "C", "D"],
+        correctOption: 0,
+        explanation: "A is correct.",
+      },
+    ],
+  };
+  let generationCalls = 0;
+  const quizRouter = createQuizRouter(
+    async () => {
+      generationCalls += 1;
+      return generated;
+    },
+    createAiRateLimiters({
+      windowMs: 60_000,
+      ipLimit: 5,
+      userLimit: 1,
+    })
+  );
+  const api = await startApi(t, {
+    role: "admin",
+    quizRouter,
+    userByToken: {
+      "admin-a-token": studentId,
+      "admin-b-token": otherBatchId,
+    },
+  });
+  const batchState = mockBatchProtocol(t);
+  const generateRequest = (authToken, authenticated = true) =>
+    request(api, "/quiz/generate-ai-quiz", {
+      method: "POST",
+      authToken,
+      authenticated,
+      body: { topic: "Testing", batch: batchId, questionCount: 1 },
+    });
+
+  assert.equal((await generateRequest("")).status, 401);
+  assert.equal(generationCalls, 0);
+
+  assert.equal((await generateRequest("admin-a-token")).status, 200);
+  const userLimited = await generateRequest("admin-a-token");
+  assert.equal(userLimited.status, 429);
+  assert.equal(userLimited.body.success, false);
+  assert.equal(generationCalls, 1);
+
+  assert.equal((await generateRequest("admin-b-token")).status, 200);
+  assert.equal(generationCalls, 2);
+  assert.equal(batchState.pendingAssignments, 0);
+});
+
+test("AI generation enforces the client-IP limit before calling the generator", async (t) => {
+  const generated = {
+    title: "Generated quiz",
+    batch: batchId,
+    correctMarks: 1,
+    incorrectMarks: 0,
+    questions: [
+      {
+        title: "Question",
+        options: ["A", "B", "C", "D"],
+        correctOption: 0,
+        explanation: "A is correct.",
+      },
+    ],
+  };
+  let generationCalls = 0;
+  const quizRouter = createQuizRouter(
+    async () => {
+      generationCalls += 1;
+      return generated;
+    },
+    createAiRateLimiters({
+      windowMs: 60_000,
+      ipLimit: 1,
+      userLimit: 5,
+    })
+  );
+  const api = await startApi(t, {
+    role: "admin",
+    quizRouter,
+    userByToken: {
+      "admin-a-token": studentId,
+      "admin-b-token": otherBatchId,
+    },
+  });
+  const batchState = mockBatchProtocol(t);
+  const generateRequest = (authToken) =>
+    request(api, "/quiz/generate-ai-quiz", {
+      method: "POST",
+      authToken,
+      body: { topic: "Testing", batch: batchId, questionCount: 1 },
+    });
+
+  assert.equal((await generateRequest("admin-a-token")).status, 200);
+  const clientLimited = await generateRequest("admin-b-token");
+  assert.equal(clientLimited.status, 429);
+  assert.equal(clientLimited.body.success, false);
+  assert.equal(generationCalls, 1);
+  assert.equal(batchState.pendingAssignments, 0);
+});
+
 test("batch creation rejects invalid names and returns the created batch", async (t) => {
   const api = await startApi(t, { role: "admin" });
   let savedBatch;
+  const savedNames = new Set();
   replaceMethod(t, Batch.prototype, "save", async function save() {
+    if (savedNames.has(this.name)) {
+      const duplicateKeyError = new Error("duplicate key");
+      duplicateKeyError.code = 11000;
+      throw duplicateKeyError;
+    }
+    savedNames.add(this.name);
     savedBatch = this;
     return this;
   });
@@ -575,6 +767,23 @@ test("batch creation rejects invalid names and returns the created batch", async
   assert.equal(savedBatch.pendingAssignments, 0);
   assert.equal(Object.hasOwn(created.body.data, "deletionInProgress"), false);
   assert.equal(Object.hasOwn(created.body.data, "pendingAssignments"), false);
+
+  const duplicate = await request(api, "/batch/add-batch", {
+    method: "POST",
+    body: { name: "Morning cohort" },
+  });
+  assert.equal(duplicate.status, 409);
+  assert.deepEqual(duplicate.body, {
+    success: false,
+    message: "A batch with this name already exists.",
+  });
+
+  const caseVariant = await request(api, "/batch/add-batch", {
+    method: "POST",
+    body: { name: "morning cohort" },
+  });
+  assert.equal(caseVariant.status, 201);
+  assert.equal(caseVariant.body.data.name, "morning cohort");
 });
 
 test("batch operations validate IDs, missing resources, and existing relationships", async (t) => {
@@ -606,6 +815,21 @@ test("batch operations validate IDs, missing resources, and existing relationshi
   assert.equal(batchState.deletionClaims, 2);
   assert.equal(batchState.deleting, false);
 
+  replaceMethod(t, Batch, "findByIdAndUpdate", async () => {
+    const duplicateKeyError = new Error("duplicate key");
+    duplicateKeyError.code = 11000;
+    throw duplicateKeyError;
+  });
+  const duplicateRename = await request(api, "/batch/update-batch", {
+    method: "POST",
+    body: { batchId, name: "Existing cohort" },
+  });
+  assert.equal(duplicateRename.status, 409);
+  assert.equal(
+    duplicateRename.body.message,
+    "A batch with this name already exists."
+  );
+
   replaceMethod(t, Batch, "findByIdAndUpdate", async () => null);
   const missingBatch = await request(api, "/batch/update-batch", {
     method: "POST",
@@ -625,6 +849,32 @@ test("batch deletion removes an unreferenced batch under its deletion claim", as
   assert.equal(batchState.exists, false);
   assert.equal(batchState.deleting, false);
   assert.equal(batchState.deletionClaims, 1);
+});
+
+test("batch deletion normalizes a legacy batch before checking or releasing its claim", async (t) => {
+  const api = await startApi(t, { role: "admin" });
+  const batchState = mockBatchProtocol(t, {
+    legacy: true,
+    student: { _id: studentId },
+  });
+
+  const blocked = await request(api, "/batch/delete-batch", {
+    method: "POST",
+    body: { batchId },
+  });
+  assert.equal(blocked.status, 409);
+  assert.equal(batchState.pendingAssignments, 0);
+  assert.equal(batchState.deleting, false);
+
+  batchState.student = null;
+  const deleted = await request(api, "/batch/delete-batch", {
+    method: "POST",
+    body: { batchId },
+  });
+  assert.equal(deleted.status, 200);
+  assert.equal(batchState.exists, false);
+  assert.equal(batchState.deleting, false);
+  assert.equal(batchState.deletionClaims, 2);
 });
 
 test("batch deletion rejects outstanding assignment claims without locking", async (t) => {

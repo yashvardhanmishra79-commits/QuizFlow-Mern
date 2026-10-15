@@ -14,6 +14,7 @@ import AdminQuizBuilder from "./pages/admin/AdminQuizBuilder";
 import AdminManageStudents from "./pages/admin/AdminManageStudents";
 import AdminManageBatches from "./pages/admin/AdminManageBatches";
 import AdminManageQuizzes from "./pages/admin/AdminManageQuizzes";
+import RouteGuard from "./components/RouteGuard";
 
 function App() {
   return (
@@ -26,18 +27,22 @@ function App() {
           <Route path="login" element={<Login />} />
           <Route path="about" element={<About />} />
           <Route path="contact" element={<Contact />} />
-          <Route path="quizzes" element={<QuizList />} />
-          <Route path="quiz/:quizId/solve" element={<QuizSolve />} />
-          <Route path="quiz/:quizId/result" element={<QuizResult />} />
+          <Route element={<RouteGuard requiredRole="student" />}>
+            <Route path="quizzes" element={<QuizList />} />
+            <Route path="quiz/:quizId/solve" element={<QuizSolve />} />
+            <Route path="quiz/:quizId/result" element={<QuizResult />} />
+          </Route>
         </Route>
 
         {/* Admin Routes */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route path="" element={<AdminDashboard />} />
-          <Route path="create-quiz" element={<AdminQuizBuilder />} />
-          <Route path="manage-students" element={<AdminManageStudents />} />
-          <Route path="manage-batches" element={<AdminManageBatches />} />
-          <Route path="manage-quizzes" element={<AdminManageQuizzes />} />
+        <Route element={<RouteGuard requiredRole="admin" />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route path="" element={<AdminDashboard />} />
+            <Route path="create-quiz" element={<AdminQuizBuilder />} />
+            <Route path="manage-students" element={<AdminManageStudents />} />
+            <Route path="manage-batches" element={<AdminManageBatches />} />
+            <Route path="manage-quizzes" element={<AdminManageQuizzes />} />
+          </Route>
         </Route>
       </Routes>
     </BrowserRouter>

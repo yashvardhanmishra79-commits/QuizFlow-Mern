@@ -1,21 +1,33 @@
 import express from "express";
 import mongoose from "mongoose";
-import userRoutes from "./routes/userRoutes.js";
 import batchRoutes from "./routes/batchRoutes.js";
-import quizRoutes from "./routes/quizRoutes.js";
+import { createQuizRouter } from "./routes/quizRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 import attemptRoutes from "./routes/attemptRoutes.js";
 import dotenv from "dotenv";
 import cors from "cors";
 import { pathToFileURL } from "node:url";
+import { createLoginRateLimiter } from "./middleware/rateLimits.js";
+import { createCorsOptions, getAllowedCorsOrigins } from "./middleware/corsConfig.js";
 
-export function createApp({ quizRouter = quizRoutes } = {}) {
+export function createApp({
+  loginLimiter = createLoginRateLimiter(),
+  quizRouter = createQuizRouter(),
+  corsOrigins = process.env.CORS_ORIGINS,
+  nodeEnv = process.env.NODE_ENV,
+} = {}) {
   const app = express();
-  app.use(cors());
+  const allowedOrigins = getAllowedCorsOrigins({
+    environment: nodeEnv,
+    configuredOrigins: corsOrigins,
+  });
+  app.use(cors(createCorsOptions(allowedOrigins)));
   app.use(express.json());
 
   app.get("/health", (_req, res) => {
     res.send("Server Is Running Perfectly!!");
   });
+  app.post("/user/login", loginLimiter);
   app.use("/user", userRoutes);
   app.use("/batch", batchRoutes);
   app.use("/quiz", quizRouter);
@@ -56,11 +68,12 @@ async function connectToDB() {
 
 export async function startServer() {
   dotenv.config();
+  const app = createApp();
   const databaseConnection = connectToDB().catch((error) => {
     console.error("Database connection failed:", error?.name || "Error");
   });
   const port = process.env.PORT || 4400;
-  const server = createApp().listen(port, () => {
+  const server = app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}/health`);
   });
   await databaseConnection;

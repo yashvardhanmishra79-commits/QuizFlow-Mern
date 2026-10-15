@@ -54,7 +54,7 @@ export async function claimBatchDeletion(batchId) {
         { pendingAssignments: { $exists: false } },
       ],
     },
-    { $set: { deletionInProgress: true } },
+    { $set: { deletionInProgress: true, pendingAssignments: 0 } },
     { new: true }
   );
   if (batch) {

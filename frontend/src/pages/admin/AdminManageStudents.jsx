@@ -9,6 +9,24 @@ import {
 import api from "../../api/api";
 import "./AdminManageStudents.css";
 
+function getBatchDisplayName(batchAssignment, batches) {
+  if (batchAssignment && typeof batchAssignment === "object") {
+    if (batchAssignment.name) {
+      return batchAssignment.name;
+    }
+    batchAssignment = batchAssignment._id;
+  }
+
+  if (!batchAssignment) {
+    return "No Batch";
+  }
+
+  return (
+    batches.find((batch) => String(batch._id) === String(batchAssignment))
+      ?.name || "Batch unavailable"
+  );
+}
+
 function AdminManageStudents() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -365,9 +383,7 @@ function AdminManageStudents() {
 
                   <td>
                     <span className="student-batch-badge">
-                      {student.batch?.name ||
-                        student.batch ||
-                        "No Batch"}
+                      {getBatchDisplayName(student.batch, batches)}
                     </span>
                   </td>
 

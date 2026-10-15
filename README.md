@@ -31,7 +31,7 @@ npm install
 Copy-Item .env.example .env
 ```
 
-Edit `backend/.env` with a private MongoDB connection string. The local defaults are `PORT=4400` and `MONGO_URL=mongodb://localhost:27017/quizflow`. Add `GEMINI_API_KEY` only to enable AI quiz generation; never commit the `.env` file or share its contents.
+Edit `backend/.env` with a private MongoDB connection string. The local defaults are `PORT=4400`, `MONGO_URL=mongodb://localhost:27017/quizflow`, and `CORS_ORIGINS=http://localhost:5173`. Add `GEMINI_API_KEY` only to enable AI quiz generation; never commit the `.env` file or share its contents.
 
 Provision the first administrator explicitly:
 
@@ -41,13 +41,21 @@ npm run provision-admin
 
 The provisioning script requires interactive confirmation of the target MongoDB host and database. It refuses to create another administrator when one already exists. Do not supply a password as a command-line argument.
 
+To reset the password for an existing administrator, run this command from `backend`:
+
+```powershell
+npm run reset-admin-password
+```
+
+The command displays the configured MongoDB target and requires you to type it before connecting. It then asks for the administrator email and requires it to be re-entered for confirmation. The new password and its confirmation are entered interactively without terminal echo; they are never command-line arguments or logged. It rejects missing, ambiguous, and non-admin accounts, never creates an account, and requires the existing `MONGO_URL` to identify the intended database. The password uses the application's Argon2id hash and policy, and the reset increments the account's session version so existing sessions are rejected. Run this only against the intended database; do not configure a production database unless an authorized production reset is intended.
+
 Start the backend:
 
 ```powershell
 npm run dev
 ```
 
-The server listens on `http://localhost:4400` by default and exposes `GET /health`. It attempts the MongoDB connection on startup and logs connection failures; database-backed requests return safe errors until the database is available. `PORT` and `MONGO_URL` can be set in the backend environment.
+The server listens on `http://localhost:4400` by default and exposes `GET /health`. It attempts the MongoDB connection on startup and logs connection failures; database-backed requests return safe errors until the database is available. `PORT`, `MONGO_URL`, and `CORS_ORIGINS` can be set in the backend environment.
 
 ### Frontend
 
@@ -64,16 +72,28 @@ The example sets `VITE_API_URL=http://localhost:4400`, matching the backend defa
 
 ### Tests and frontend checks
 
-Backend tests use mocks and do not load `.env`, connect to MongoDB, or call Gemini:
+The normal backend suite uses mocks and does not connect to MongoDB or call Gemini:
 
 ```powershell
 Set-Location backend
 npm test
 ```
 
+Batch-name index behavior also has a separate, opt-in MongoDB integration suite. It requires an already-running disposable MongoDB instance; the project does not download or start database binaries. It connects only with `MONGODB_INTEGRATION_URI` and never falls back to `MONGO_URL`. It refuses any database except the specifically named `quizflow_batch_name_index_test`. It creates a random collection in that database, verifies it did not already exist, and drops only the collection it created. Do not use an application database URI:
+
+```powershell
+Set-Location backend
+$env:MONGODB_INTEGRATION_URI = "mongodb://localhost:27017/quizflow_batch_name_index_test"
+npm run test:integration:batch-name-index
+Remove-Item Env:MONGODB_INTEGRATION_URI
+```
+
+If the variable is unset, the integration suite reports the test as skipped. Running it with a configured URI requires that the disposable server is available; the URI's database must match the dedicated name exactly.
+
 Frontend scripts, run from `frontend`:
 
 ```powershell
+npm test
 npm run lint
 npm run build
 ```
@@ -86,10 +106,25 @@ npm run build
 | --- | --- |
 | `PORT` | `4400`, HTTP server port |
 | `MONGO_URL` | `mongodb://localhost:27017/quizflow`, MongoDB connection URI |
+| `CORS_ORIGINS` | Comma-separated exact HTTP(S) frontend origins; local default is `http://localhost:5173` outside production |
 | `GEMINI_API_KEY` | Optional secret; needed only for AI quiz generation |
 | `GEMINI_MODEL` | Optional Gemini model override; defaults to `gemini-3.8-flash` |
 
+In production, set `CORS_ORIGINS` explicitly in the backend hosting environment to the verified frontend origin(s), for example the exact scheme, hostname, and port used by the deployed frontend. The repository does not identify a production frontend URL, so determine and verify it with the deployment configuration before setting this variable and deploying; the backend intentionally fails to start in production when it is missing or invalid. Do not use wildcards, paths, query strings, or fragments. CORS controls whether browsers may expose responses to frontend code; it does not prevent direct non-browser requests and does not replace authentication or authorization. Requests without an `Origin` header continue normally. Credentialed CORS is disabled.
+
 The AI service also accepts `GOOGLE_API_KEY` as a compatibility alias. Keep all real credentials in ignored local environment files or the deployment platform's secret store.
+
+Request limits can be adjusted using the following backend environment variables. Values must be positive integers; windows are in milliseconds:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `LOGIN_RATE_LIMIT_WINDOW_MS` | `900000` | Login counter window (15 minutes) |
+| `LOGIN_RATE_LIMIT_MAX` | `10` | Login requests allowed per client IP per window |
+| `AI_RATE_LIMIT_WINDOW_MS` | `3600000` | AI-generation counter window (1 hour) |
+| `AI_RATE_LIMIT_IP_MAX` | `10` | AI-generation requests allowed per client IP per window |
+| `AI_RATE_LIMIT_USER_MAX` | `5` | AI-generation requests allowed per authenticated admin per window |
+
+Both limiters use `express-rate-limit`'s in-memory store. Counters reset when the process restarts and are not shared across backend instances; multi-instance deployments need a shared rate-limit store for a consistent aggregate limit. The app does not enable Express proxy trust, so client IPs come from the direct socket connection and forwarded headers are not trusted. No reverse-proxy deployment configuration is present in this repository. If deploying behind a proxy, configure trust only for the known proxy addresses/hops after verifying the actual topology; otherwise clients may share the proxy's IP limit.
 
 ### Frontend (`frontend/.env`)
 
@@ -206,3 +241,21 @@ npm run migrate-emails -- --apply
 ```
 
 Keep application writes stopped until the migration and index creation complete. The utility was not run as part of this code change; run it only against an explicitly authorized database after backup and review.
+
+## Batch-name unique index
+
+Batch names are trimmed by the API and compared **case-sensitively**: `Morning cohort` and `morning cohort` are distinct names. MongoDB enforces uniqueness using an explicitly simple-collation index on string-valued `batches.name`, so collection collation cannot change these semantics. The partial unique index is named `name_1_unique`; it allows legacy documents with a missing or non-string `name` to remain outside the index. The batch schema declares the index but disables automatic index creation for that model, so deploying the schema alone does not create it.
+
+Before deployment, stop batch create/update writes and run the dry run from `backend` against the explicitly configured database:
+
+```powershell
+npm run manage-batch-name-index
+```
+
+The dry run reports conflicting exact names and document IDs, string names with leading or trailing whitespace, and array-valued `name` fields that contain at least one string. Whitespace names are noncanonical because the API trims new names; manually resolve them and any resulting collision with a canonical name before rerunning the dry run. The index's partial filter is `{ name: { $type: "string" } }`: it excludes missing names and scalar non-string names, but MongoDB query `$type` also matches arrays containing strings, so those unsupported legacy values must be manually resolved too. The tool never trims, renames, or deletes records. It does not change records or indexes. After reviewing and verifying the target and results, apply explicitly:
+
+```powershell
+npm run manage-batch-name-index -- --apply
+```
+
+Apply requires interactive confirmation of the displayed scheme, configured host(s), and database name. For `mongodb+srv` it displays the configured SRV hostname, not resolved DNS targets. It refuses to create the index while duplicate, noncanonical-whitespace, or partial-index-participating array names remain, and creates the partial unique index without changing batch records. Keep batch writes stopped until creation succeeds; a concurrent write during index construction can cause MongoDB to reject index creation, in which case rerun the dry run and apply after resolving the cause. Deploy the application code only after the index exists so concurrent creates are protected from the start. The normal Mongoose model does not auto-create this index. This migration was not run against any database as part of this change.
