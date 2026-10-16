@@ -157,8 +157,8 @@ function QuizSolve() {
   return (
     <div className="quiz-solve-page">
       <header className="solve-header">
-        <button className="back-btn" onClick={() => navigate("/quizzes")}>
-          <MdArrowBack />
+        <button className="back-btn" aria-label="Back to quizzes" onClick={() => navigate("/quizzes")}>
+          <MdArrowBack aria-hidden="true" />
         </button>
         <div className="quiz-info">
           <h2>{quiz?.title || "Quiz"}</h2>

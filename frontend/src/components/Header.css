@@ -3,7 +3,7 @@ header {
     box-shadow: var(--shadow-sm);
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: 1000;
 }
 
 .header-main {
@@ -65,6 +65,10 @@ header {
 .header-main > .nav-links a:hover {
     color: var(--primary);
     background: var(--primary-light);
+}
+
+.mobile-nav-account {
+    display: none;
 }
 
 .login-btn {
@@ -167,7 +171,7 @@ header {
 /* ===== MOBILE (≤768px) ===== */
 @media (max-width: 768px) {
     .header-main {
-        position: static;
+        position: relative;
         padding: 10px 16px;
         flex-wrap: wrap;
     }
@@ -204,13 +208,26 @@ header {
         gap: 0;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         border-bottom: 1px solid var(--border-color);
-        z-index: 200;
+        z-index: 3;
         max-height: calc(100vh - 64px);
         overflow-y: auto;
+        isolation: isolate;
     }
 
     .header-main > .nav-links.open {
         display: flex;
+    }
+
+    .mobile-menu-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.35);
+        z-index: 1;
+    }
+
+    .header-main {
+        z-index: 2;
     }
 
     .nav-links a {
@@ -238,6 +255,44 @@ header {
     /* User menu dropdown on mobile */
     .user-menu {
         display: none;
+    }
+
+    .mobile-nav-account {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid var(--border-light);
+    }
+
+    .mobile-nav-user-name {
+        padding: 10px 16px 6px;
+        color: var(--text-muted);
+        font-size: 13px;
+        overflow-wrap: anywhere;
+    }
+
+    .mobile-nav-account a,
+    .mobile-nav-logout {
+        width: 100%;
+        min-height: 44px;
+        padding: 10px 16px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: var(--text-primary);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    .mobile-nav-account a:hover,
+    .mobile-nav-logout:hover,
+    .mobile-nav-account a:focus-visible,
+    .mobile-nav-logout:focus-visible {
+        background: var(--primary-light);
+        color: var(--primary);
     }
 }
 

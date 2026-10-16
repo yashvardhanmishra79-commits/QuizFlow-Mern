@@ -395,7 +395,7 @@ function AdminManageStudents() {
                       <button
                         type="button"
                         className="student-edit-btn"
-                        title="Edit"
+                        aria-label={`Edit student ${student.name}`}
                         onClick={() =>
                           handleEdit(student)
                         }
@@ -406,7 +406,7 @@ function AdminManageStudents() {
                       <button
                         type="button"
                         className="student-delete-btn"
-                        title="Delete"
+                        aria-label={`Delete student ${student.name}`}
                         onClick={() =>
                           handleDelete(
                             student._id
@@ -464,10 +464,14 @@ function AdminManageStudents() {
                   : "Add Student"}
               </h2>
 
-              <MdClose
+              <button
+                type="button"
                 className="modal-close-icon"
+                aria-label="Close student dialog"
                 onClick={closeModal}
-              />
+              >
+                <MdClose aria-hidden="true" />
+              </button>
             </div>
 
             {/* MODAL BODY */}

@@ -99,8 +99,24 @@ function Header() {
           <Link to="/quizzes" onClick={() => setMobileMenuOpen(false)} aria-current={location.pathname === "/quizzes" ? "page" : undefined}>Quizzes</Link>
           <Link to="/about" onClick={() => setMobileMenuOpen(false)} aria-current={location.pathname === "/about" ? "page" : undefined}>About</Link>
           <Link to="/contact" onClick={() => setMobileMenuOpen(false)} aria-current={location.pathname === "/contact" ? "page" : undefined}>Contact</Link>
+          {user && (
+            <div className="mobile-nav-account">
+              <span className="mobile-nav-user-name">Signed in as {user.name}</span>
+              <Link to={user.role === "admin" ? "/admin" : "/quizzes"} onClick={() => setMobileMenuOpen(false)}>
+                {user.role === "admin" ? "Admin Panel" : "Solve Quiz"}
+              </Link>
+              <button type="button" className="mobile-nav-logout" onClick={handleLogout}>Logout</button>
+            </div>
+          )}
         </nav>
       </div>
+      {mobileMenuOpen && (
+        <div
+          className="mobile-menu-backdrop"
+          aria-hidden="true"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
     </header>
   );
 }

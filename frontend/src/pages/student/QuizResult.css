@@ -100,6 +100,13 @@
   background-color: var(--primary-hover);
 }
 
+.back-btn:focus-visible,
+.action-btn:focus-visible,
+.tabs button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
 /* =========================
    MAIN RESULT LAYOUT
    ========================= */
@@ -588,6 +595,11 @@
 }
 
 .rq-header {
+  width: 100%;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -599,6 +611,11 @@
 
 .rq-header:hover {
   background-color: var(--border-light);
+}
+
+.rq-header:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
 }
 
 .rq-left {
@@ -651,8 +668,7 @@
   transition: transform 0.2s ease;
 }
 
-.review-question .rq-content.expanded ~ .rq-header .expand-icon,
-.rq-content.expanded + .rq-header .expand-icon {
+.rq-header[aria-expanded="true"] .expand-icon {
   transform: rotate(180deg);
 }
 

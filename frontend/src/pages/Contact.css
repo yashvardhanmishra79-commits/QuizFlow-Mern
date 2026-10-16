@@ -239,24 +239,28 @@
   }
 }
 
-.success-message {
+.form-availability-note,
+.availability-message {
+  color: #1e3a8a;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  overflow-wrap: anywhere;
+}
+
+.form-availability-note {
+  margin: -12px 0 24px;
+  padding: 12px 16px;
+  line-height: 1.5;
+}
+
+.availability-message {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-top: 20px;
   padding: 16px;
-  background: #ecfdf5;
-  border: 1px solid #a7f3d0;
-  border-radius: 10px;
-  color: #065f46;
   font-weight: 500;
-  overflow-wrap: anywhere;
-}
-
-.success-message svg {
-  font-size: 1.25rem;
-  color: #10b981;
-  flex-shrink: 0;
 }
 
 /* FAQ Section */

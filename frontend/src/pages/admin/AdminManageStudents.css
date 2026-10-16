@@ -157,6 +157,19 @@
     min-width: clamp(32px, 6vw, 34px);
 }
 
+.student-action-btns>button:focus-visible,
+.modal-close-icon:focus-visible,
+.modal-cancel-btn:focus-visible,
+.modal-submit-btn:focus-visible,
+.manage-students-add-btn:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+@media (min-width: 769px) {
+    .student-action-btns>button { min-width: 40px; min-height: 40px; }
+}
+
 .student-edit-btn {
     background-color: var(--primary-light);
     color: var(--primary);
@@ -300,6 +313,9 @@
 }
 
 .modal-close-icon {
+    border: 0;
+    padding: 0;
+    background: transparent;
     font-size: clamp(20px, 3vw, 24px);
     color: var(--text-muted);
     cursor: pointer;

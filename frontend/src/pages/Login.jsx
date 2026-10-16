@@ -70,10 +70,11 @@ function Login() {
         {error && <div className="error-message">{error}</div>}
 
         <div className="form-rows">
-          <label htmlFor="">Email Address</label>
+          <label htmlFor="login-email">Email Address</label>
           <div className="form-input">
             <MdMailOutline className="form-input-icon" />
             <input
+              id="login-email"
               type="email"
               placeholder="admin@institute.com"
               name="email"
@@ -85,10 +86,11 @@ function Login() {
         </div>
 
         <div className="form-rows">
-          <label htmlFor="">Password</label>
+          <label htmlFor="login-password">Password</label>
           <div className="form-input password-input-wrapper">
             <MdLockOutline className="form-input-icon" />
             <input
+              id="login-password"
               type={showPassword ? "text" : "password"}
               name="password"
               value={data.password}

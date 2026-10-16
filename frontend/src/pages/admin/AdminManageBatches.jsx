@@ -145,7 +145,8 @@ function AdminManageBatches() {
 
               <button
                 className="batch-delete-btn"
-                title="Delete"
+                type="button"
+                aria-label={`Delete batch ${batch.name}`}
                 onClick={() => handleDelete(batch._id)}
               >
                 <MdDelete />
@@ -176,18 +177,23 @@ function AdminManageBatches() {
             <div className="modal-header">
               <h2>Add Batch</h2>
 
-              <MdClose
+              <button
+                type="button"
                 className="modal-close-icon"
+                aria-label="Close add batch dialog"
                 onClick={() => setIsModalOpen(false)}
-              />
+              >
+                <MdClose aria-hidden="true" />
+              </button>
             </div>
 
             {/* Modal Body */}
             <div className="modal-body">
               <div className="modal-form-group">
-                <label>Batch Name</label>
+                <label htmlFor="batch-name">Batch Name</label>
 
                 <input
+                  id="batch-name"
                   type="text"
                   placeholder="Enter batch name"
                   value={batchName}

@@ -1,6 +1,6 @@
 .admin-layout {
     display: grid;
-    grid-template-columns: clamp(220px, 20vw, 260px) 1fr;
+    grid-template-columns: clamp(220px, 20vw, 260px) minmax(0, 1fr);
     min-height: 100vh;
     max-width: 1600px;
     margin: 0 auto;
@@ -193,6 +193,7 @@
     height: 100%;
     max-width: 1300px;
     margin: auto;
+    min-width: 0;
 }
 
 /* Mobile Sidebar Overlay */
@@ -219,6 +220,16 @@
 .admin-sidebar-mobile.open {
     display: flex;
     flex-direction: column;
+}
+
+.admin-mobile-close {
+    display: none;
+    width: 44px;
+    height: 44px;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 24px;
 }
 
 .admin-sidebar-mobile .admin-sidebar-top {
@@ -277,14 +288,9 @@
         display: none;
     }
 
-    .admin-sidebar-overlay {
-        display: block;
-    }
+    .admin-sidebar-overlay.open { display: block; }
 
-    .admin-sidebar-mobile {
-        display: flex;
-        flex-direction: column;
-    }
+    .admin-sidebar-mobile.open { display: flex; flex-direction: column; }
 
     .admin-content {
         padding: clamp(12px, 2vw, 20px);
@@ -292,7 +298,15 @@
 
     .admin-mobile-toggle {
         display: flex;
+        position: sticky;
+        top: 8px;
+        z-index: 90;
+        margin-bottom: 8px;
+        background: white;
+        box-shadow: var(--shadow-sm);
     }
+
+    .admin-mobile-close { display: flex; align-items: center; justify-content: center; margin-left: auto; }
 }
 
 @media (max-width: 480px) {

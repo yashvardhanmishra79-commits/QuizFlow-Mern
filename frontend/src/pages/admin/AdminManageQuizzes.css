@@ -121,6 +121,8 @@
     cursor: pointer;
     transition: var(--transition);
     margin-left: auto;
+    min-width: 44px;
+    min-height: 44px;
 }
 
 .quiz-list-delete-btn:hover {

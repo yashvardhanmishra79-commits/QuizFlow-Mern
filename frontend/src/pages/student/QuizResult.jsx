@@ -254,8 +254,8 @@ function QuizResult() {
   return (
     <div className="quiz-result-page">
       <header className="result-header">
-        <button className="back-btn" onClick={() => navigate("/quizzes")}>
-          <MdArrowBack />
+        <button className="back-btn" aria-label="Back to quizzes" onClick={() => navigate("/quizzes")}>
+          <MdArrowBack aria-hidden="true" />
         </button>
         <div className="result-title">
           <h1>{quiz.title}</h1>
@@ -444,8 +444,12 @@ function QuizResult() {
                     key={qId}
                     className={`review-question ${status}`}
                   >
-                    <div
+                    <button
+                      type="button"
                       className="rq-header"
+                      aria-expanded={isExpanded}
+                      aria-controls={`review-question-${qId}`}
+                      aria-label={`${isExpanded ? "Collapse" : "Expand"} question ${index + 1} review`}
                       onClick={() => toggleExpand(qId)}
                     >
                       <div className="rq-left">
@@ -455,10 +459,11 @@ function QuizResult() {
                           {getStatusLabel(status)}
                         </span>
                       </div>
-                      <MdCheckCircle className="expand-icon" />
-                    </div>
+                      <MdCheckCircle className="expand-icon" aria-hidden="true" />
+                    </button>
 
                     <div
+                      id={`review-question-${qId}`}
                       className={`rq-content ${isExpanded ? "expanded" : ""}`}
                     >
                       <div className="rq-question">

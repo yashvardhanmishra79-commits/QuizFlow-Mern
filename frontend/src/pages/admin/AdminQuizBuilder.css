@@ -163,13 +163,26 @@
 }
 
 .quiz-question-header-delete {
+    border: 0;
+    padding: 0;
+    background: transparent;
     font-size: 25px;
     cursor: pointer;
     color: var(--text-light);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .quiz-question-header-delete:hover {
     color: var(--error);
+}
+
+.quiz-question-header-delete:focus-visible,
+.add-question-button:focus-visible,
+.quiz-notification-close:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
 }
 
 .quiz-options-container {
@@ -395,6 +408,9 @@
 }
 
 .add-question-button {
+    width: 100%;
+    border: 0;
+    font: inherit;
     margin-top: 20px;
     background-color: var(--primary);
     text-align: center;
@@ -546,6 +562,11 @@
 .ai-modal-close-btn:hover:not(:disabled) {
     color: var(--danger);
     background-color: var(--danger-light);
+}
+
+.ai-modal-close-btn:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
 }
 
 .ai-modal-close-btn:disabled {

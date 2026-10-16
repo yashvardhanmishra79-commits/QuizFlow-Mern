@@ -1,18 +1,26 @@
-import { NavLink, Outlet } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { useUser } from "../context/useUser";
-import { MdDashboard, MdGroup, MdClass, MdOutlineQuiz, MdLogout } from "react-icons/md";
+import { MdDashboard, MdGroup, MdClass, MdOutlineQuiz, MdLogout, MdMenu, MdClose } from "react-icons/md";
 import { IoCreate } from "react-icons/io5";
 
 import "./AdminLayout.css";
 function AdminLayout() {
   const { user, logout } = useUser();
   const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate("/");
+    setMobileMenuOpen(false);
   };
+
+  useEffect(() => {
+    const closeMenu = () => setMobileMenuOpen(false);
+    window.addEventListener("popstate", closeMenu);
+    return () => window.removeEventListener("popstate", closeMenu);
+  }, []);
 
   return (
     <div className="admin-layout">
@@ -78,7 +86,34 @@ function AdminLayout() {
         </div>
       </div>
 
+      <div className={`admin-sidebar-overlay ${mobileMenuOpen ? "open" : ""}`} onClick={() => setMobileMenuOpen(false)} />
+      <aside className={`admin-sidebar-mobile ${mobileMenuOpen ? "open" : ""}`} aria-label="Admin navigation">
+        <div className="admin-sidebar-top">
+          <div className="admin-sidebar-header">
+            <div>
+              <span>QuizFlow Admin</span>
+              <span className="admin-sidebar-header-text-2">Coaching Portal</span>
+            </div>
+            <button className="admin-mobile-close" type="button" onClick={() => setMobileMenuOpen(false)} aria-label="Close admin menu"><MdClose /></button>
+          </div>
+          <div className="admin-sidebar-nav">
+            <div className="admin-sidebar-nav-title">Menu</div>
+            <NavLink to="/admin" end onClick={() => setMobileMenuOpen(false)} className="admin-sidebar-nav-row"><MdDashboard className="nav-icon" /><span>Dashboard</span></NavLink>
+            <NavLink to="/admin/create-quiz" onClick={() => setMobileMenuOpen(false)} className="admin-sidebar-nav-row"><IoCreate className="nav-icon" /><span>Quiz Builder</span></NavLink>
+            <NavLink to="/admin/manage-quizzes" onClick={() => setMobileMenuOpen(false)} className="admin-sidebar-nav-row"><MdOutlineQuiz className="nav-icon" /><span>Manage Quizzes</span></NavLink>
+            <NavLink to="/admin/manage-students" onClick={() => setMobileMenuOpen(false)} className="admin-sidebar-nav-row"><MdGroup className="nav-icon" /><span>Manage Students</span></NavLink>
+            <NavLink to="/admin/manage-batches" onClick={() => setMobileMenuOpen(false)} className="admin-sidebar-nav-row"><MdClass className="nav-icon" /><span>Manage Batches</span></NavLink>
+          </div>
+        </div>
+        <div className="admin-sidebar-end">
+          <button className="admin-logout-btn" onClick={handleLogout}><MdLogout className="logout-icon" /><span>Logout</span></button>
+        </div>
+      </aside>
+
       <div className="admin-content">
+        <button className="admin-mobile-toggle" type="button" onClick={() => setMobileMenuOpen(true)} aria-label="Open admin menu" aria-expanded={mobileMenuOpen}>
+          <MdMenu />
+        </button>
         <Outlet />
       </div>
     </div>

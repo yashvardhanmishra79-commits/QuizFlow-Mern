@@ -6,9 +6,9 @@ import {
   MdLocationOn,
   MdAccessTime,
   MdSend,
-  MdCheckCircle,
 } from "react-icons/md";
 import { MdAdd } from "react-icons/md";
+import { getContactSubmissionState } from "./contactSubmission";
 
 const contactInfo = [
   {
@@ -84,14 +84,9 @@ function Contact() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setSubmitStatus("submitting");
-    // Simulate API call
-    setTimeout(() => {
-      setSubmitStatus("success");
-      setFormData({ name: "", email: "", subject: "", message: "" });
-    }, 1500);
+    setSubmitStatus(getContactSubmissionState());
   };
 
   return (
@@ -130,7 +125,10 @@ function Contact() {
           {/* Contact Form */}
           <div className="contact-form-wrapper">
             <h2>Send Us a Message</h2>
-            <form className="contact-form" onSubmit={handleSubmit}>
+            <p className="form-availability-note" id="contact-delivery-note">
+              Online message delivery is not currently available. Please use the email address or phone number shown here to contact QuizFlow.
+            </p>
+            <form className="contact-form" onSubmit={handleSubmit} aria-describedby="contact-delivery-note">
               <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="name">Full Name *</label>
@@ -190,26 +188,14 @@ function Contact() {
               <button
                 type="submit"
                 className="submit-btn"
-                disabled={submitStatus === "submitting"}
+                disabled={submitStatus?.status === "unavailable"}
               >
-                {submitStatus === "submitting" ? (
-                  <>
-                    <span className="spinner"></span>
-                    Sending...
-                  </>
-                ) : (
-                  <>
-                    <MdSend />
-                    Send Message
-                  </>
-                )}
+                <MdSend />
+                Send Message
               </button>
-              {submitStatus === "success" && (
-                <div className="success-message">
-                  <MdCheckCircle />
-                  <span>
-                    Message sent successfully! We'll get back to you soon.
-                  </span>
+              {submitStatus?.status === "unavailable" && (
+                <div className="availability-message" role="status" aria-live="polite">
+                  <span>{submitStatus.message}</span>
                 </div>
               )}
             </form>

@@ -128,6 +128,7 @@ function AdminQuizBuilder() {
           <button
             type="button"
             className="quiz-notification-close"
+            aria-label="Dismiss notification"
             onClick={() => setNotification("")}
           >
             <MdClose />
@@ -138,7 +139,9 @@ function AdminQuizBuilder() {
       {/* Quiz Builder Header */}
       <div className="quiz-builder-header">
         <input
+          id="quiz-title"
           type="text"
+          aria-label="Quiz title"
           className="quiz-builder-input"
           placeholder="Enter Quiz Title..."
           value={quizSettings.quizTitle}
@@ -167,15 +170,20 @@ function AdminQuizBuilder() {
                   Question {index + 1}
                 </div>
                 <div className="quiz-question-header-actions">
-                  <MdDelete
+                  <button
+                    type="button"
                     className="quiz-question-header-delete"
-                    title="Delete Question"
+                    aria-label={`Delete Question ${index + 1}`}
                     onClick={() => removeQuestion(index)}
-                  />
+                  >
+                    <MdDelete aria-hidden="true" />
+                  </button>
                 </div>
               </div>
               <div className="quiz-question-input-box">
                 <textarea
+                  id={`question-${index}`}
+                  aria-label={`Question ${index + 1} text`}
                   placeholder="Write Your Question..."
                   value={question.title}
                   onChange={(e) =>
@@ -189,6 +197,7 @@ function AdminQuizBuilder() {
                   <div className="quiz-option-card" key={optionIndex}>
                     <div className="quiz-option-card-left">
                       <input
+                        aria-label={`Mark option ${["A", "B", "C", "D"][optionIndex]} as correct for question ${index + 1}`}
                         type="radio"
                         checked={optionIndex == question.correctOption}
                         onChange={() =>
@@ -198,6 +207,8 @@ function AdminQuizBuilder() {
                       <span>{["A", "B", "C", "D"][optionIndex]}</span>
                     </div>
                     <input
+                      id={`question-${index}-option-${optionIndex}`}
+                      aria-label={`Question ${index + 1} option ${["A", "B", "C", "D"][optionIndex]}`}
                       type="text"
                       className="quiz-option-input"
                       placeholder="Enter Option..."
@@ -216,8 +227,9 @@ function AdminQuizBuilder() {
 
               <div className="quiz-question-footer">
                 <div className="quiz-footer-left">
-                  <label>Marks</label>
+                  <label htmlFor={`question-${index}-marks`}>Marks</label>
                   <input
+                    id={`question-${index}-marks`}
                     type="number"
                     value={quizSettings.correctMarks}
                     readOnly
@@ -225,8 +237,9 @@ function AdminQuizBuilder() {
                 </div>
 
                 <div className="quiz-footer-right">
-                  <label>Explanation </label>
+                  <label htmlFor={`question-${index}-explanation`}>Explanation </label>
                   <textarea
+                    id={`question-${index}-explanation`}
                     placeholder="Write Your Explanation..."
                     value={question.explanation}
                     onChange={(e) =>
@@ -238,9 +251,9 @@ function AdminQuizBuilder() {
             </div>
           ))}
 
-          <div className="add-question-button" onClick={addQuestion}>
+          <button type="button" className="add-question-button" onClick={addQuestion}>
             <h1>Add Question</h1>
-          </div>
+          </button>
         </div>
 
         {/* This will contain quiz settings */}
@@ -251,8 +264,9 @@ function AdminQuizBuilder() {
           </div>
 
           <div className="quiz-settings-select-batch">
-            <label>Target Batch</label>
+            <label htmlFor="quiz-target-batch">Target Batch</label>
             <select
+              id="quiz-target-batch"
               value={quizSettings.batch}
               onChange={(e) =>
                 handleQuizSettingsChange("batch", e.target.value)
@@ -271,8 +285,9 @@ function AdminQuizBuilder() {
             <label>Global Marking Scheme</label>
             <div>
               <div>
-                <label>Correct</label>
+                <label htmlFor="quiz-correct-marks">Correct</label>
                 <input
+                  id="quiz-correct-marks"
                   type="number"
                   min="0"
                   step="any"
@@ -284,8 +299,9 @@ function AdminQuizBuilder() {
               </div>
 
               <div>
-                <label>Incorrect</label>
+                <label htmlFor="quiz-incorrect-marks">Incorrect</label>
                 <input
+                  id="quiz-incorrect-marks"
                   type="number"
                   step="any"
                   value={quizSettings.incorrectMarks}
@@ -307,15 +323,17 @@ function AdminQuizBuilder() {
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
+            aria-labelledby="ai-modal-title"
           >
             <div className="ai-modal-header">
               <div className="ai-modal-title-group">
                 <MdAutoAwesome className="ai-modal-icon" />
-                <h2>Create Quiz With AI</h2>
+                <h2 id="ai-modal-title">Create Quiz With AI</h2>
               </div>
               <button
                 type="button"
                 className="ai-modal-close-btn"
+                aria-label="Close AI quiz generator"
                 disabled={isGenerating}
                 onClick={() => setIsAiModalOpen(false)}
               >
@@ -331,10 +349,11 @@ function AdminQuizBuilder() {
               )}
 
               <div className="ai-modal-field">
-                <label>
+                <label htmlFor="ai-topic">
                   Topic <span className="ai-required">*</span>
                 </label>
                 <input
+                  id="ai-topic"
                   type="text"
                   placeholder="e.g., Data Structures, Modern JavaScript, Indian History..."
                   value={aiForm.topic}
@@ -346,8 +365,9 @@ function AdminQuizBuilder() {
 
               <div className="ai-modal-grid-2">
                 <div className="ai-modal-field">
-                  <label>Target Batch</label>
+                  <label htmlFor="ai-target-batch">Target Batch</label>
                   <select
+                    id="ai-target-batch"
                     value={aiForm.batch}
                     disabled={isGenerating}
                     onChange={(e) => handleAiFormChange("batch", e.target.value)}
@@ -362,8 +382,9 @@ function AdminQuizBuilder() {
                 </div>
 
                 <div className="ai-modal-field">
-                  <label>Difficulty</label>
+                  <label htmlFor="ai-difficulty">Difficulty</label>
                   <select
+                    id="ai-difficulty"
                     value={aiForm.difficulty}
                     disabled={isGenerating}
                     onChange={(e) =>
@@ -379,8 +400,9 @@ function AdminQuizBuilder() {
 
               <div className="ai-modal-grid-3">
                 <div className="ai-modal-field">
-                  <label>Questions</label>
+                  <label htmlFor="ai-question-count">Questions</label>
                   <input
+                    id="ai-question-count"
                     type="number"
                     min="1"
                     max="20"
@@ -393,8 +415,9 @@ function AdminQuizBuilder() {
                 </div>
 
                 <div className="ai-modal-field">
-                  <label>Correct Marks</label>
+                  <label htmlFor="ai-correct-marks">Correct Marks</label>
                   <input
+                    id="ai-correct-marks"
                     type="number"
                     min="0"
                     step="any"
@@ -407,8 +430,9 @@ function AdminQuizBuilder() {
                 </div>
 
                 <div className="ai-modal-field">
-                  <label>Incorrect Marks</label>
+                  <label htmlFor="ai-incorrect-marks">Incorrect Marks</label>
                   <input
+                    id="ai-incorrect-marks"
                     type="number"
                     step="any"
                     value={aiForm.incorrectMarks}

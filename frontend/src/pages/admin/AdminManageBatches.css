@@ -122,6 +122,8 @@
     font-size: clamp(14px, 2vw, 17px);
     cursor: pointer;
     transition: var(--transition);
+    min-width: 44px;
+    min-height: 44px;
 }
 
 .batch-delete-btn:hover {
@@ -179,6 +181,9 @@
 }
 
 .modal-close-icon {
+    border: 0;
+    padding: 0;
+    background: transparent;
     font-size: clamp(20px, 3vw, 24px);
     color: var(--text-muted);
     cursor: pointer;
@@ -192,6 +197,15 @@
 
 .modal-close-icon:hover {
     color: var(--error);
+}
+
+.modal-close-icon:focus-visible,
+.batch-delete-btn:focus-visible,
+.modal-cancel-btn:focus-visible,
+.modal-submit-btn:focus-visible,
+.manage-batches-add-btn:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
 }
 
 .modal-body {
