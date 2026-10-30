@@ -125,6 +125,28 @@
     min-height: 44px;
 }
 
+.quiz-list-edit-btn {
+    width: clamp(28px, 6vw, 34px);
+    height: clamp(28px, 6vw, 34px);
+    border: none;
+    border-radius: clamp(6px, 1vw, 8px);
+    background-color: var(--primary-light);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(14px, 2vw, 18px);
+    cursor: pointer;
+    transition: var(--transition);
+    min-width: 44px;
+    min-height: 44px;
+}
+
+.quiz-list-edit-btn:hover {
+    background-color: var(--primary);
+    color: var(--text-white);
+}
+
 .quiz-list-delete-btn:hover {
     background-color: var(--error);
     color: var(--text-white);

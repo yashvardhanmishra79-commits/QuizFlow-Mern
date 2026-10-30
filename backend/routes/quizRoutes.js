@@ -9,6 +9,7 @@ import { createAiRateLimiters } from "../middleware/rateLimits.js";
 import {
   isDuplicateKeyError,
   isValidationError,
+  RequestValidationError,
   requireObjectBody,
   requireText,
   validateQuestionCount,
@@ -126,6 +127,72 @@ export function createQuizRouter(
     }
   });
 
+  router.post("/update-quiz", requireAdmin, async (req, res) => {
+    try {
+      const body = requireObjectBody(req.body);
+      const allowedFields = new Set([
+        "quizId",
+        "title",
+        "batch",
+        "correctMarks",
+        "incorrectMarks",
+        "questions",
+      ]);
+      const unexpectedField = Object.keys(body).find(
+        (field) => !allowedFields.has(field)
+      );
+      if (unexpectedField) {
+        throw new RequestValidationError(
+          `Field '${unexpectedField}' cannot be updated.`
+        );
+      }
+
+      const quizId = validateObjectId(body.quizId, "quiz ID");
+      const quizContent = validateQuizContent(body);
+      const markingScheme = validateMarkingScheme(
+        body.correctMarks,
+        body.incorrectMarks,
+        quizContent.questions.length
+      );
+      const existingQuiz = await Quiz.findById(quizId).select("_id");
+      if (!existingQuiz) {
+        return res.status(404).send({
+          success: false,
+          message: "Quiz not found.",
+        });
+      }
+
+      const updatedQuiz = await withBatchAssignment(quizContent.batch, () =>
+        Quiz.findByIdAndUpdate(
+          quizId,
+          {
+            $set: {
+              title: quizContent.title,
+              batch: quizContent.batch,
+              questions: quizContent.questions,
+              ...markingScheme,
+            },
+          },
+          { new: true, runValidators: true }
+        )
+      );
+      if (!updatedQuiz) {
+        return res.status(404).send({
+          success: false,
+          message: "Quiz not found.",
+        });
+      }
+
+      return res.send({
+        success: true,
+        message: "Quiz Updated Successfully",
+        data: updatedQuiz,
+      });
+    } catch (error) {
+      return sendQuizError(res, error, "Unable to update quiz.");
+    }
+  });
+
   router.post("/delete-quiz", requireAdmin, async (req, res) => {
     try {
       const body = requireObjectBody(req.body);
@@ -151,6 +218,22 @@ export function createQuizRouter(
       return res.send({ success: true, message: "Success", data: quizzes });
     } catch (error) {
       return sendQuizError(res, error, "Unable to fetch quizzes.");
+    }
+  });
+
+  router.get("/admin/:quizId", requireAdmin, async (req, res) => {
+    try {
+      const quizId = validateObjectId(req.params.quizId, "quiz ID");
+      const quizData = await Quiz.findById(quizId);
+      if (!quizData) {
+        return res.status(404).send({
+          success: false,
+          message: "Quiz not found.",
+        });
+      }
+      return res.send({ success: true, message: "Success", data: quizData });
+    } catch (error) {
+      return sendQuizError(res, error, "Unable to fetch quiz.");
     }
   });
 

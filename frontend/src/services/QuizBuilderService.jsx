@@ -108,7 +108,7 @@ function useQuiz() {
     return response.data;
   }
 
-  async function handleSubmit() {
+  async function handleSubmit(quizId) {
     const data = {
       title: quizSettings.quizTitle,
       batch: quizSettings.batch,
@@ -116,13 +116,15 @@ function useQuiz() {
       incorrectMarks: quizSettings.incorrectMarks,
       questions: questions,
     };
-    const response = await api.post("/quiz/add-quiz", data);
+    const response = await api.post(
+      quizId ? "/quiz/update-quiz" : "/quiz/add-quiz",
+      quizId ? { quizId, ...data } : data
+    );
     if (response.data?.success) {
-      alert("Quiz Added Successfully");
+      alert(quizId ? "Quiz Updated Successfully" : "Quiz Added Successfully");
       return true;
     } else {
-      alert("Some Error Occured...");
-      return false;
+      throw new Error(response.data?.message || "Unable to save the quiz.");
     }
   }
 

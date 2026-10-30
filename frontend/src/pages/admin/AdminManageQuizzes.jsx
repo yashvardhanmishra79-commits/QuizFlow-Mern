@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import {
   MdAdd,
   MdDelete,
+  MdEdit,
   MdOutlineQuiz,
 } from "react-icons/md";
 import { useEffect, useState } from "react";
@@ -120,6 +121,15 @@ function AdminManageQuizzes() {
               <span className="quiz-list-name">
                 {quiz.title}
               </span>
+
+              <Link
+                className="quiz-list-edit-btn"
+                title="Edit"
+                aria-label={`Edit ${quiz.title}`}
+                to={`/admin/edit-quiz/${quiz._id}`}
+              >
+                <MdEdit />
+              </Link>
 
               <button
                 className="quiz-list-delete-btn"

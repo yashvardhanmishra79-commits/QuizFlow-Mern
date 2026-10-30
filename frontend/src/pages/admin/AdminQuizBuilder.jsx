@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
 import "./AdminQuizBuilder.css";
 import { MdDelete, MdClose, MdAutoAwesome } from "react-icons/md";
 import { IoMdSettings } from "react-icons/io";
 import useQuiz from "../../services/QuizBuilderService";
+import api from "../../api/api";
 
 function AdminQuizBuilder() {
+  const navigate = useNavigate();
+  const { quizId } = useParams();
   const {
     questions,
     addQuestion,
@@ -25,6 +29,29 @@ function AdminQuizBuilder() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiError, setAiError] = useState("");
   const [notification, setNotification] = useState("");
+  const [isLoadingQuiz, setIsLoadingQuiz] = useState(Boolean(quizId));
+  const [loadError, setLoadError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (!quizId) return;
+    let active = true;
+    api.get(`/quiz/admin/${quizId}`)
+      .then((response) => {
+        if (active && response.data?.success) {
+          populateQuizData(response.data.data);
+        }
+      })
+      .catch((error) => {
+        if (active) {
+          setLoadError(error.response?.data?.message || "Unable to load quiz.");
+        }
+      })
+      .finally(() => active && setIsLoadingQuiz(false));
+    return () => { active = false; };
+    // populateQuizData is stable for the duration of this load operation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quizId]);
 
   const [aiForm, setAiForm] = useState({
     topic: "",
@@ -36,13 +63,15 @@ function AdminQuizBuilder() {
   });
 
   const handleSaveQuiz = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
     try {
-      const saved = await handleSubmit();
+      const saved = await handleSubmit(quizId);
       if (!saved) {
         return;
       }
 
-      resetQuiz();
+      if (!quizId) resetQuiz();
       setNotification("");
       setAiError("");
       setIsAiModalOpen(false);
@@ -55,14 +84,34 @@ function AdminQuizBuilder() {
         correctMarks: 1,
         incorrectMarks: 0,
       });
+      navigate("/admin/manage-quizzes");
     } catch (error) {
+      setNotification(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to save the quiz. Your changes have been preserved."
+      );
       alert(
         error?.response?.data?.message ||
           error?.message ||
           "Unable to save the quiz. Your changes have been preserved."
       );
+    } finally {
+      setIsSaving(false);
     }
   };
+
+  if (isLoadingQuiz) {
+    return <section className="quiz-builder-section">Loading quiz...</section>;
+  }
+  if (loadError) {
+    return (
+      <section className="quiz-builder-section">
+        <div className="quiz-builder-error">{loadError}</div>
+        <button type="button" onClick={() => navigate("/admin/manage-quizzes")}>Cancel</button>
+      </section>
+    );
+  }
 
   const handleOpenAiModal = () => {
     setAiForm((prev) => ({
@@ -155,7 +204,10 @@ function AdminQuizBuilder() {
               <MdAutoAwesome /> Create With AI
             </span>
           </button>
-          <button type="button" onClick={handleSaveQuiz}>Save Quiz</button>
+          <button type="button" disabled={isSaving} onClick={() => navigate("/admin/manage-quizzes")}>Cancel</button>
+          <button type="button" disabled={isSaving} onClick={handleSaveQuiz}>
+            {isSaving ? "Saving..." : quizId ? "Save Changes" : "Save Quiz"}
+          </button>
         </div>
       </div>
 

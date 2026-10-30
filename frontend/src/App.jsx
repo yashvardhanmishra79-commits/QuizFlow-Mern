@@ -39,6 +39,7 @@ function App() {
           <Route path="/admin" element={<AdminLayout />}>
             <Route path="" element={<AdminDashboard />} />
             <Route path="create-quiz" element={<AdminQuizBuilder />} />
+            <Route path="edit-quiz/:quizId" element={<AdminQuizBuilder />} />
             <Route path="manage-students" element={<AdminManageStudents />} />
             <Route path="manage-batches" element={<AdminManageBatches />} />
             <Route path="manage-quizzes" element={<AdminManageQuizzes />} />
