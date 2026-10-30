@@ -67,6 +67,19 @@ export function validateQuestionCount(value) {
   return count;
 }
 
+export function validateRequestId(value) {
+  if (
+    typeof value !== "string" ||
+    value.trim().length < 8 ||
+    value.length > 128
+  ) {
+    throw new RequestValidationError(
+      "A valid submission request ID is required."
+    );
+  }
+  return value;
+}
+
 export function validateQuizContent(payload) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
     throw new RequestValidationError("Quiz data must be an object.");

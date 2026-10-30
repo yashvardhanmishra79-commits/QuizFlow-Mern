@@ -6,6 +6,8 @@ import { createApp } from "../index.js";
 import Batch from "../models/Batch.js";
 import Quiz from "../models/Quiz.js";
 import QuizAttempt from "../models/QuizAttempt.js";
+import QuizAttemptSession from "../models/QuizAttemptSession.js";
+import QuizRevision from "../models/QuizRevision.js";
 import Session from "../models/Session.js";
 import User from "../models/User.js";
 import { createQuizRouter } from "../routes/quizRoutes.js";
@@ -378,6 +380,20 @@ test("quiz creation validates content and preserves negative decimal marks", asy
   const batchState = mockBatchProtocol(t);
   let savedQuiz;
   let quizSaveCount = 0;
+  replaceMethod(t, QuizRevision, "findOne", () => ({
+    sort: () => ({
+      select: () => ({ lean: async () => null }),
+    }),
+  }));
+  replaceMethod(t, QuizRevision, "create", async (revision) => ({
+    ...revision,
+    _id: "64b000000000000000000021",
+  }));
+  replaceMethod(t, Quiz, "updateOne", async () => ({ matchedCount: 1 }));
+  replaceMethod(t, Quiz, "findById", async () => ({
+    ...savedQuiz,
+    revisionReady: true,
+  }));
   replaceMethod(t, Quiz.prototype, "save", async function save() {
     quizSaveCount += 1;
     savedQuiz = { ...this.toObject(), _id: quizId };
@@ -903,8 +919,26 @@ test("attempt submission saves correct, incorrect, and unanswered grading", asyn
       options: ["A", "B", "C", "D"],
     })),
   };
-  replaceMethod(t, Quiz, "findById", () => ({
-    populate: async () => quiz,
+  const revision = {
+    _id: "64b000000000000000000021",
+    quiz: quizId,
+    batch: batchId,
+    title: quiz.title,
+    correctMarks: quiz.correctMarks,
+    incorrectMarks: quiz.incorrectMarks,
+    questions: quiz.questions,
+  };
+  replaceMethod(t, QuizRevision, "findOne", async () => revision);
+  replaceMethod(t, QuizAttemptSession, "findOne", async () => ({
+    _id: "64b000000000000000000022",
+    quiz: quizId,
+    revision: revision._id,
+    expiresAt: new Date(Date.now() + 60_000),
+    consumedAt: null,
+  }));
+  replaceMethod(t, QuizAttemptSession, "findOneAndUpdate", async () => ({}));
+  replaceMethod(t, Batch, "findById", () => ({
+    select: async () => ({ name: "Test batch" }),
   }));
   replaceMethod(t, QuizAttempt, "findOne", async () => null);
   let createdAttempt;
@@ -927,11 +961,9 @@ test("attempt submission saves correct, incorrect, and unanswered grading", asyn
   assert.equal(response.body.data.unansweredCount, 1);
   assert.deepEqual(createdAttempt.answers, [0, 1, 2, 0, null]);
 
-  replaceMethod(t, Quiz, "findById", () => ({
-    populate: async () => ({
-      ...quiz,
-      incorrectMarks: -Number.MAX_VALUE,
-    }),
+  replaceMethod(t, QuizRevision, "findOne", async () => ({
+    ...revision,
+    incorrectMarks: -Number.MAX_VALUE,
   }));
   const invalidStoredScheme = await request(api, "/attempts", {
     method: "POST",
@@ -948,14 +980,18 @@ test("attempt submission saves correct, incorrect, and unanswered grading", asyn
 test("attempt submission rejects another batch without creating an attempt", async (t) => {
   const api = await startApi(t, { role: "student", batch: batchId });
   replaceMethod(t, QuizAttempt, "findOne", async () => null);
-  replaceMethod(t, Quiz, "findById", () => ({
-    populate: async () => ({
-      _id: quizId,
-      batch: { _id: otherBatchId, name: "Other batch" },
-      questions: [
-        { correctOption: 0, options: ["A", "B", "C", "D"] },
-      ],
-    }),
+  replaceMethod(t, QuizAttemptSession, "findOne", async () => ({
+    _id: "64b000000000000000000022",
+    quiz: quizId,
+    revision: "64b000000000000000000021",
+    expiresAt: new Date(Date.now() + 60_000),
+    consumedAt: null,
+  }));
+  replaceMethod(t, QuizRevision, "findOne", async () => ({
+    _id: "64b000000000000000000021",
+    quiz: quizId,
+    batch: otherBatchId,
+    questions: [{ correctOption: 0, options: ["A", "B", "C", "D"] }],
   }));
   let attemptCreated = false;
   replaceMethod(t, QuizAttempt, "create", async () => {
@@ -1027,4 +1063,231 @@ test("attempt retries are deduplicated and attempt lookup is scoped to its owner
     _id: attemptId,
     student: otherStudentId,
   });
+});
+
+test("attempt start binds a revision and submission grades that revision after an edit", async (t) => {
+  const api = await startApi(t, { role: "student", batch: batchId });
+  const oldRevisionId = "64b000000000000000000021";
+  const newRevisionId = "64b000000000000000000022";
+  const oldRevision = {
+    _id: oldRevisionId,
+    quiz: quizId,
+    title: "Original quiz",
+    batch: batchId,
+    correctMarks: 2,
+    incorrectMarks: -1,
+    questions: [
+      {
+        title: "Original question",
+        options: ["A", "B"],
+        correctOption: 0,
+        explanation: "Original",
+      },
+    ],
+  };
+  let currentRevisionId = oldRevisionId;
+  let session;
+  let createdAttempt;
+  replaceMethod(t, Quiz, "findById", () => ({
+    lean: async () => ({
+      _id: quizId,
+      currentRevision: currentRevisionId,
+      revisionReady: true,
+    }),
+  }));
+  replaceMethod(t, QuizRevision, "findOne", async (filter) => ({
+    ...oldRevision,
+    _id: filter._id,
+  }));
+  replaceMethod(t, QuizAttemptSession, "findOne", async () => session || null);
+  replaceMethod(t, QuizAttemptSession, "create", async (data) => {
+    session = { ...data, _id: "64b000000000000000000023" };
+    return session;
+  });
+  replaceMethod(t, QuizAttemptSession, "findOneAndUpdate", async () => ({}));
+  replaceMethod(t, QuizAttempt, "findOne", async () => null);
+  replaceMethod(t, QuizAttempt, "create", async (data) => {
+    createdAttempt = data;
+    return { ...data, _id: attemptId };
+  });
+  replaceMethod(t, Batch, "findById", () => ({
+    select: async () => ({ name: "Test batch" }),
+  }));
+
+  const requestId = "revision-bound-request";
+  const started = await request(api, "/attempts/start", {
+    method: "POST",
+    body: { quizId, requestId },
+  });
+  assert.equal(started.status, 200);
+  assert.equal("correctOption" in started.body.data.questions[0], false);
+  assert.equal(session.revision, oldRevisionId);
+
+  currentRevisionId = newRevisionId;
+  const submitted = await request(api, "/attempts", {
+    method: "POST",
+    body: { quizId, requestId, answers: { 0: 0 } },
+  });
+  assert.equal(submitted.status, 201);
+  assert.equal(createdAttempt.quizRevision, oldRevisionId);
+  assert.equal(createdAttempt.obtainedMarks, 2);
+});
+
+test("expired attempt sessions are rejected without grading", async (t) => {
+  const api = await startApi(t, { role: "student", batch: batchId });
+  replaceMethod(t, QuizAttempt, "findOne", async () => null);
+  replaceMethod(t, QuizAttemptSession, "findOne", async () => ({
+    quiz: quizId,
+    revision: "64b000000000000000000021",
+    expiresAt: new Date(Date.now() - 1),
+    consumedAt: null,
+  }));
+  let revisionLookups = 0;
+  replaceMethod(t, QuizRevision, "findOne", async () => {
+    revisionLookups += 1;
+    return null;
+  });
+
+  const response = await request(api, "/attempts", {
+    method: "POST",
+    body: { quizId, requestId: "expired-request", answers: {} },
+  });
+  assert.equal(response.status, 410);
+  assert.equal(revisionLookups, 0);
+});
+
+test("admin edits allocate above orphan revision numbers and use an optimistic pointer update", async (t) => {
+  const api = await startApi(t, { role: "admin" });
+  mockBatchProtocol(t);
+  const currentRevision = {
+    _id: "64b000000000000000000021",
+    quiz: quizId,
+    revisionNumber: 3,
+    contentHash: "old-hash",
+  };
+  const existingQuiz = {
+    _id: quizId,
+    title: "Original",
+    batch: batchId,
+    correctMarks: 1,
+    incorrectMarks: 0,
+    questions: [],
+    currentRevision: currentRevision._id,
+    revisionNumber: 3,
+    contentHash: currentRevision.contentHash,
+    revisionReady: true,
+  };
+  let revisionLookup = 0;
+  let createdRevision;
+  replaceMethod(t, Quiz, "findById", () => ({
+    select: async () => existingQuiz,
+  }));
+  replaceMethod(t, QuizRevision, "findOne", () => {
+    revisionLookup += 1;
+    if (revisionLookup === 1) return Promise.resolve(currentRevision);
+    return {
+      sort: () => ({
+        select: () => ({ lean: async () => ({ revisionNumber: 7 }) }),
+      }),
+    };
+  });
+  replaceMethod(t, QuizRevision, "create", async (data) => {
+    createdRevision = { ...data, _id: "64b000000000000000000024" };
+    return createdRevision;
+  });
+  replaceMethod(t, Quiz, "findOneAndUpdate", async (filter) => {
+    assert.equal(filter.currentRevision, currentRevision._id);
+    assert.equal(filter.revisionNumber, 3);
+    return { ...existingQuiz, currentRevision: createdRevision?._id };
+  });
+
+  const response = await request(api, "/quiz/update-quiz", {
+    method: "POST",
+    body: {
+      quizId,
+      title: "Updated",
+      batch: batchId,
+      correctMarks: 1,
+      incorrectMarks: 0,
+      questions: [
+        {
+          title: "Question",
+          options: ["A", "B", "C", "D"],
+          correctOption: 0,
+          explanation: "",
+        },
+      ],
+      expectedRevision: currentRevision._id,
+      expectedRevisionNumber: 3,
+    },
+  });
+  assert.equal(response.status, 200);
+  assert.equal(createdRevision.revisionNumber, 8);
+});
+
+test("admin edit rejects a lost optimistic concurrency race", async (t) => {
+  const api = await startApi(t, { role: "admin" });
+  mockBatchProtocol(t);
+  const currentRevision = {
+    _id: "64b000000000000000000021",
+    quiz: quizId,
+    revisionNumber: 1,
+    contentHash: "old-hash",
+  };
+  let findByIdCalls = 0;
+  replaceMethod(t, Quiz, "findById", () => ({
+    select: async () => {
+      findByIdCalls += 1;
+      return findByIdCalls === 1
+        ? {
+            _id: quizId,
+            title: "Original",
+            batch: batchId,
+            correctMarks: 1,
+            incorrectMarks: 0,
+            questions: [],
+            currentRevision: currentRevision._id,
+            revisionNumber: 1,
+            contentHash: currentRevision.contentHash,
+            revisionReady: true,
+          }
+        : { _id: quizId, contentHash: "different-hash" };
+    },
+  }));
+  let revisionLookup = 0;
+  replaceMethod(t, QuizRevision, "findOne", () => {
+    revisionLookup += 1;
+    if (revisionLookup === 1) return Promise.resolve(currentRevision);
+    return {
+      sort: () => ({
+        select: () => ({ lean: async () => ({ revisionNumber: 1 }) }),
+      }),
+    };
+  });
+  replaceMethod(t, QuizRevision, "create", async (data) => ({
+    ...data,
+    _id: "64b000000000000000000024",
+  }));
+  replaceMethod(t, Quiz, "findOneAndUpdate", async () => null);
+
+  const response = await request(api, "/quiz/update-quiz", {
+    method: "POST",
+    body: {
+      quizId,
+      title: "Updated",
+      batch: batchId,
+      correctMarks: 1,
+      incorrectMarks: 0,
+      questions: [
+        {
+          title: "Question",
+          options: ["A", "B", "C", "D"],
+          correctOption: 0,
+        },
+      ],
+      expectedRevision: currentRevision._id,
+      expectedRevisionNumber: 1,
+    },
+  });
+  assert.equal(response.status, 409);
 });

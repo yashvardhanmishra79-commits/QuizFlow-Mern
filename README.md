@@ -242,6 +242,24 @@ npm run migrate-emails -- --apply
 
 Keep application writes stopped until the migration and index creation complete. The utility was not run as part of this code change; run it only against an explicitly authorized database after backup and review.
 
+## Quiz revision migration
+
+Quiz edits are stored as append-only `QuizRevision` records. Existing quizzes need a one-time, explicit backfill before students can start revision-bound attempts. The migration is read-only by default, leaves unrelated orphan revisions untouched, promotes only a revision whose content exactly matches the current quiz, and allocates new revision numbers above every existing revision number.
+
+Run the dry run from `backend`:
+
+```powershell
+npm run migrate:quiz-revisions
+```
+
+After reviewing the intended database and taking a verified backup, apply interactively:
+
+```powershell
+npm run migrate:quiz-revisions -- --apply
+```
+
+The command requires an explicit `MONGO_URL`, is restartable, and never runs during server startup. Do not execute it as part of normal application deployment or against an unapproved database.
+
 ## Batch-name unique index
 
 Batch names are trimmed by the API and compared **case-sensitively**: `Morning cohort` and `morning cohort` are distinct names. MongoDB enforces uniqueness using an explicitly simple-collation index on string-valued `batches.name`, so collection collation cannot change these semantics. The partial unique index is named `name_1_unique`; it allows legacy documents with a missing or non-string `name` to remain outside the index. The batch schema declares the index but disables automatic index creation for that model, so deploying the schema alone does not create it.

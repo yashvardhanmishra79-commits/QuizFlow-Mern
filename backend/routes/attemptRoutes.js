@@ -1,7 +1,14 @@
 import express from "express";
+import Batch from "../models/Batch.js";
 import Quiz from "../models/Quiz.js";
 import QuizAttempt from "../models/QuizAttempt.js";
+import QuizAttemptSession from "../models/QuizAttemptSession.js";
+import QuizRevision from "../models/QuizRevision.js";
 import { requireAdmin, requireStudent } from "../middleware/auth.js";
+import {
+  ATTEMPT_SESSION_DURATION_MS,
+  toPublicQuizRevision,
+} from "../utils/quizRevisions.js";
 import {
   calculateQuizScore,
   MarkingValidationError,
@@ -10,10 +17,161 @@ import {
 import {
   RequestValidationError,
   requireObjectBody,
+  validateRequestId,
   validateObjectId,
 } from "../utils/validation.js";
 
 const router = express.Router();
+
+async function findRevisionForQuiz(quizId, revisionId) {
+  return QuizRevision.findOne({ _id: revisionId, quiz: quizId });
+}
+
+function isExpired(session) {
+  return !session || session.expiresAt <= new Date();
+}
+
+async function getExistingAttempt(studentId, requestId, quizId) {
+  const attempt = await QuizAttempt.findOne({
+    student: studentId,
+    requestId,
+  });
+  if (attempt && String(attempt.quiz) !== String(quizId)) {
+    const error = new Error("This submission request ID was already used.");
+    error.statusCode = 409;
+    throw error;
+  }
+  return attempt;
+}
+
+router.post("/start", requireStudent, async (req, res) => {
+  try {
+    const body = requireObjectBody(req.body);
+    const quizId = validateObjectId(body.quizId, "quiz ID");
+    const requestId = validateRequestId(body.requestId);
+    const existingAttempt = await getExistingAttempt(
+      req.student._id,
+      requestId,
+      quizId
+    );
+    if (existingAttempt) {
+      return res.send({
+        success: true,
+        message: "Attempt already saved.",
+        completed: true,
+        data: { _id: existingAttempt._id },
+      });
+    }
+
+    const existingSession = await QuizAttemptSession.findOne({
+      student: req.student._id,
+      requestId,
+    });
+    if (existingSession) {
+      if (String(existingSession.quiz) !== String(quizId)) {
+        return res.status(409).send({
+          success: false,
+          message: "This submission request ID was already used.",
+        });
+      }
+      if (existingSession.consumedAt || isExpired(existingSession)) {
+        return res.status(410).send({
+          success: false,
+          message: "This quiz attempt has expired. Please start again.",
+        });
+      }
+      const existingRevision = await findRevisionForQuiz(
+        quizId,
+        existingSession.revision
+      );
+      if (!existingRevision) {
+        return res.status(409).send({
+          success: false,
+          message: "This quiz attempt is no longer available.",
+        });
+      }
+      return res.send({
+        success: true,
+        message: "Quiz attempt resumed.",
+        data: {
+          ...toPublicQuizRevision(existingRevision),
+          requestId,
+          expiresAt: existingSession.expiresAt,
+        },
+      });
+    }
+
+    const quiz = await Quiz.findById(quizId).lean();
+    if (!quiz || !quiz.currentRevision || quiz.revisionReady !== true) {
+      return res.status(404).send({
+        success: false,
+        message: "Quiz revision not found.",
+      });
+    }
+    const revision = await findRevisionForQuiz(quizId, quiz.currentRevision);
+    if (!revision) {
+      return res.status(404).send({
+        success: false,
+        message: "Quiz revision not found.",
+      });
+    }
+    if (
+      !req.student.batch ||
+      String(req.student.batch) !== String(revision.batch)
+    ) {
+      return res.status(403).send({
+        success: false,
+        message: "This quiz is not assigned to your batch.",
+      });
+    }
+
+    const expiresAt = new Date(Date.now() + ATTEMPT_SESSION_DURATION_MS);
+    let session;
+    try {
+      session = await QuizAttemptSession.create({
+        student: req.student._id,
+        quiz: quizId,
+        revision: revision._id,
+        requestId,
+        expiresAt,
+      });
+    } catch (error) {
+      if (!error || error.code !== 11000) throw error;
+      session = await QuizAttemptSession.findOne({
+        student: req.student._id,
+        requestId,
+      });
+      if (!session || isExpired(session)) {
+        return res.status(410).send({
+          success: false,
+          message: "This quiz attempt has expired. Please start again.",
+        });
+      }
+    }
+
+    return res.send({
+      success: true,
+      message: "Quiz attempt started.",
+      data: {
+        ...toPublicQuizRevision(revision),
+        requestId,
+        expiresAt: session.expiresAt,
+      },
+    });
+  } catch (error) {
+    if (error instanceof RequestValidationError) {
+      return res.status(400).send({ success: false, message: error.message });
+    }
+    if (error.statusCode === 409) {
+      return res.status(409).send({ success: false, message: error.message });
+    }
+    console.error("Start quiz attempt error:", error?.name || "Error");
+    return res.status(500).send({
+      success: false,
+      message: "Unable to start the quiz attempt.",
+    });
+  }
+});
 
 router.post("/", requireStudent, async (req, res) => {
   let quizId;
@@ -23,23 +181,12 @@ router.post("/", requireStudent, async (req, res) => {
     const body = requireObjectBody(req.body);
     quizId = validateObjectId(body.quizId, "quiz ID");
     answers = body.answers;
-    requestId = body.requestId;
+    requestId = validateRequestId(body.requestId);
   } catch (error) {
     if (!(error instanceof RequestValidationError)) {
       throw error;
     }
     return res.status(400).send({ success: false, message: error.message });
-  }
-
-  if (
-    typeof requestId !== "string" ||
-    requestId.trim().length < 8 ||
-    requestId.length > 128
-  ) {
-    return res.status(400).send({
-      success: false,
-      message: "A valid submission request ID is required.",
-    });
   }
 
   if (
@@ -54,10 +201,11 @@ router.post("/", requireStudent, async (req, res) => {
   }
 
   try {
-    const existingAttempt = await QuizAttempt.findOne({
-      student: req.student._id,
+    const existingAttempt = await getExistingAttempt(
+      req.student._id,
       requestId,
-    });
+      quizId
+    );
     if (existingAttempt) {
       if (String(existingAttempt.quiz) !== String(quizId)) {
         return res.status(409).send({
@@ -72,17 +220,34 @@ router.post("/", requireStudent, async (req, res) => {
       });
     }
 
-    const quiz = await Quiz.findById(quizId).populate("batch", "name");
-    if (!quiz) {
+    const session = await QuizAttemptSession.findOne({
+      student: req.student._id,
+      requestId,
+    });
+    if (!session || session.consumedAt || isExpired(session)) {
+      return res.status(410).send({
+        success: false,
+        message: "This quiz attempt has expired or was not started.",
+      });
+    }
+    if (String(session.quiz) !== String(quizId)) {
+      return res.status(409).send({
+        success: false,
+        message: "This submission request ID was already used.",
+      });
+    }
+
+    const revision = await findRevisionForQuiz(quizId, session.revision);
+    if (!revision) {
       return res.status(404).send({
         success: false,
-        message: "Quiz not found.",
+        message: "Quiz revision not found.",
       });
     }
 
     if (
       !req.student.batch ||
-      String(req.student.batch) !== String(quiz.batch?._id)
+      String(req.student.batch) !== String(revision.batch)
     ) {
       return res.status(403).send({
         success: false,
@@ -90,7 +255,9 @@ router.post("/", requireStudent, async (req, res) => {
       });
     }
 
-    const questions = Array.isArray(quiz.questions) ? quiz.questions : [];
+    const questions = Array.isArray(revision.questions)
+      ? revision.questions
+      : [];
     if (!questions.length) {
       return res.status(400).send({
         success: false,
@@ -125,8 +292,8 @@ router.post("/", requireStudent, async (req, res) => {
     let score;
     try {
       markingScheme = validateMarkingScheme(
-        quiz.correctMarks ?? 1,
-        quiz.incorrectMarks ?? 0,
+        revision.correctMarks,
+        revision.incorrectMarks,
         questions.length
       );
       score = calculateQuizScore({
@@ -152,15 +319,17 @@ router.post("/", requireStudent, async (req, res) => {
       percentage,
     } = score;
     const { correctMarks, incorrectMarks } = markingScheme;
+    const batch = await Batch.findById(revision.batch).select("name");
 
     try {
       const attempt = await QuizAttempt.create({
         student: req.student._id,
-        quiz: quiz._id,
+        quiz: quizId,
+        quizRevision: revision._id,
         requestId,
         quizSnapshot: {
-          title: quiz.title || "",
-          batchName: quiz.batch?.name || "",
+          title: revision.title || "",
+          batchName: batch?.name || "",
           correctMarks,
           incorrectMarks,
           questions: questions.map((question) => ({
@@ -178,6 +347,11 @@ router.post("/", requireStudent, async (req, res) => {
         incorrectCount,
         unansweredCount,
       });
+
+      await QuizAttemptSession.findOneAndUpdate(
+        { _id: session._id, consumedAt: null },
+        { $set: { consumedAt: new Date() } }
+      );
 
       return res.status(201).send({
         success: true,

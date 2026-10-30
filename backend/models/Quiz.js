@@ -15,6 +15,13 @@ const quizSchema = mongoose.Schema({
       },
     ],
   },
+  currentRevision: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "quizrevisions",
+  },
+  revisionNumber: { type: Number, default: 0 },
+  contentHash: String,
+  revisionReady: { type: Boolean, default: false },
 });
 
 const quizModel = mongoose.model("quizes", quizSchema);

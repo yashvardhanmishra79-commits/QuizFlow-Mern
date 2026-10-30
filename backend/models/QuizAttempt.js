@@ -32,6 +32,10 @@ const quizAttemptSchema = new mongoose.Schema({
     ref: "quizes",
     required: true,
   },
+  quizRevision: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "quizrevisions",
+  },
   requestId: { type: String, required: true },
   quizSnapshot: { type: quizSnapshotSchema, required: true },
   answers: [{ type: Number, default: null }],

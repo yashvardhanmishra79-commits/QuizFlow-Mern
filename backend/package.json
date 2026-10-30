@@ -13,6 +13,7 @@
     "reset-admin-password": "node scripts/resetAdminPassword.js",
     "migrate-passwords": "node scripts/migratePasswords.js",
     "migrate-emails": "node scripts/migrateEmails.js",
+    "migrate:quiz-revisions": "node scripts/migrateQuizRevisions.js",
     "manage-batch-name-index": "node scripts/manageBatchNameIndex.js"
   },
   "dependencies": {

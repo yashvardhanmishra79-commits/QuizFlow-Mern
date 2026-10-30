@@ -108,7 +108,7 @@ function useQuiz() {
     return response.data;
   }
 
-  async function handleSubmit(quizId) {
+  async function handleSubmit(quizId, revision) {
     const data = {
       title: quizSettings.quizTitle,
       batch: quizSettings.batch,
@@ -118,7 +118,14 @@ function useQuiz() {
     };
     const response = await api.post(
       quizId ? "/quiz/update-quiz" : "/quiz/add-quiz",
-      quizId ? { quizId, ...data } : data
+      quizId
+        ? {
+            quizId,
+            ...data,
+            expectedRevision: revision?.id,
+            expectedRevisionNumber: revision?.number,
+          }
+        : data
     );
     if (response.data?.success) {
       alert(quizId ? "Quiz Updated Successfully" : "Quiz Added Successfully");

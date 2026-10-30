@@ -32,6 +32,7 @@ function AdminQuizBuilder() {
   const [isLoadingQuiz, setIsLoadingQuiz] = useState(Boolean(quizId));
   const [loadError, setLoadError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [loadedRevision, setLoadedRevision] = useState(null);
 
   useEffect(() => {
     if (!quizId) return;
@@ -40,6 +41,10 @@ function AdminQuizBuilder() {
       .then((response) => {
         if (active && response.data?.success) {
           populateQuizData(response.data.data);
+          setLoadedRevision({
+            id: response.data.data.currentRevision,
+            number: response.data.data.revisionNumber,
+          });
         }
       })
       .catch((error) => {
@@ -66,7 +71,7 @@ function AdminQuizBuilder() {
     if (isSaving) return;
     setIsSaving(true);
     try {
-      const saved = await handleSubmit(quizId);
+      const saved = await handleSubmit(quizId, loadedRevision);
       if (!saved) {
         return;
       }

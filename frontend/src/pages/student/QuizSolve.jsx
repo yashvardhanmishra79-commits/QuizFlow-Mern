@@ -30,6 +30,18 @@ function QuizSolve() {
   const [submitting, setSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState("");
 
+  const getRequestId = (validId) => {
+    const requestKey = `quiz-attempt-request-${validId}`;
+    let requestId = sessionStorage.getItem(requestKey);
+    if (!requestId) {
+      requestId =
+        window.crypto?.randomUUID?.() ||
+        `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      sessionStorage.setItem(requestKey, requestId);
+    }
+    return { requestKey, requestId };
+  };
+
   useEffect(() => {
     async function getData() {
       // Prevent network call if quizId is undefined or literal "undefined"
@@ -39,10 +51,19 @@ function QuizSolve() {
         return;
       }
 
+      const requestKey = `quiz-attempt-request-${quizId}`;
       try {
         setLoading(true);
-        const response = await api.get(`/quiz/single/${quizId}`);
+        const { requestId } = getRequestId(quizId);
+        const response = await api.post("/attempts/start", {
+          quizId,
+          requestId,
+        });
         if (response.data?.success && response.data?.data) {
+          if (response.data.completed && response.data.data._id) {
+            navigate(`/quiz/${quizId}/result?attemptId=${response.data.data._id}`);
+            return;
+          }
           setQuiz(response.data.data);
           setError(null);
         } else {
@@ -50,14 +71,20 @@ function QuizSolve() {
         }
       } catch (err) {
         console.error("API error fetching quiz:", err);
-        setError("Error connecting to server to fetch quiz.");
+        if (err.response?.status === 410) {
+          sessionStorage.removeItem(requestKey);
+        }
+        setError(
+          err.response?.data?.message ||
+            "Error connecting to server to fetch quiz."
+        );
       } finally {
         setLoading(false);
       }
     }
 
     getData();
-  }, [quizId]);
+  }, [quizId, navigate]);
 
   const questionsList = quiz?.questions || [];
   const questionsCount = questionsList.length;
@@ -99,14 +126,7 @@ function QuizSolve() {
       return;
     }
 
-    const requestKey = `quiz-attempt-request-${validId}`;
-    let requestId = sessionStorage.getItem(requestKey);
-    if (!requestId) {
-      requestId =
-        window.crypto?.randomUUID?.() ||
-        `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      sessionStorage.setItem(requestKey, requestId);
-    }
+    const { requestKey, requestId } = getRequestId(validId);
 
     setSubmitting(true);
     setSubmissionError("");
